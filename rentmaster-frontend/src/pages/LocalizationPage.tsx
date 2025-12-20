@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Globe, 
-  Languages, 
-  DollarSign, 
-  Calendar, 
-  MapPin, 
-  Settings, 
-  Download, 
-  Upload, 
-  Check, 
-  X, 
-  Edit, 
+import {
+  Globe,
+  Languages,
+  DollarSign,
+  Calendar,
+  MapPin,
+  Settings,
+  Download,
+  Upload,
+  Check,
+  X,
+  Edit,
   Plus,
   Trash2,
   Eye,
@@ -69,7 +69,7 @@ interface CurrencyLocalization {
   thousandsSeparator: string;
 }
 
-const LocalizationPage: React.FC = () => {
+export const LocalizationPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('languages');
   const [languages, setLanguages] = useState<Language[]>([]);
   const [translations, setTranslations] = useState<Translation[]>([]);
@@ -215,7 +215,7 @@ const LocalizationPage: React.FC = () => {
     }
   };
 
-  const filteredTranslations = translations.filter(t => 
+  const filteredTranslations = translations.filter(t =>
     t.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
     t.value.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -252,15 +252,15 @@ const LocalizationPage: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="completion-progress">
               <div className="progress-label">
                 <span>Completion</span>
                 <span>{language.completionPercentage.toFixed(1)}%</span>
               </div>
               <div className="progress-bar">
-                <div 
-                  className="progress-fill" 
+                <div
+                  className="progress-fill"
                   style={{ width: `${language.completionPercentage}%` }}
                 />
               </div>
@@ -270,8 +270,8 @@ const LocalizationPage: React.FC = () => {
               <button onClick={() => setEditingItem(language)} className="action-button">
                 <Edit /> Edit
               </button>
-              <button 
-                onClick={() => setSelectedLanguage(language.code)} 
+              <button
+                onClick={() => setSelectedLanguage(language.code)}
                 className="action-button"
               >
                 <Eye /> View Translations
@@ -288,8 +288,8 @@ const LocalizationPage: React.FC = () => {
       <div className="section-header">
         <h3><Globe className="section-icon" />Translations Management</h3>
         <div className="header-actions">
-          <select 
-            value={selectedLanguage} 
+          <select
+            value={selectedLanguage}
             onChange={(e) => setSelectedLanguage(e.target.value)}
             className="language-selector"
           >
@@ -299,8 +299,8 @@ const LocalizationPage: React.FC = () => {
               </option>
             ))}
           </select>
-          <select 
-            value={selectedCategory} 
+          <select
+            value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="category-selector"
           >
@@ -331,15 +331,15 @@ const LocalizationPage: React.FC = () => {
         </div>
 
         <div className="import-export-controls">
-          <button 
-            onClick={() => handleExportTranslations('JSON')} 
+          <button
+            onClick={() => handleExportTranslations('JSON')}
             className="export-button"
             disabled={loading}
           >
             <Download /> Export JSON
           </button>
-          <button 
-            onClick={() => handleExportTranslations('CSV')} 
+          <button
+            onClick={() => handleExportTranslations('CSV')}
             className="export-button"
             disabled={loading}
           >
@@ -387,14 +387,14 @@ const LocalizationPage: React.FC = () => {
                   </div>
                 </td>
                 <td className="actions-cell">
-                  <button 
-                    onClick={() => setEditingItem(translation)} 
+                  <button
+                    onClick={() => setEditingItem(translation)}
                     className="action-button"
                   >
                     <Edit />
                   </button>
-                  <button 
-                    onClick={() => handleDeleteTranslation(translation.id)} 
+                  <button
+                    onClick={() => handleDeleteTranslation(translation.id)}
                     className="action-button delete"
                   >
                     <Trash2 />
@@ -424,7 +424,7 @@ const LocalizationPage: React.FC = () => {
               <h4>{locale.name}</h4>
               <span className="locale-code">{locale.code}</span>
             </div>
-            
+
             <div className="locale-details">
               <div className="detail-row">
                 <span className="label">Language:</span>
@@ -482,7 +482,7 @@ const LocalizationPage: React.FC = () => {
                 <span className="currency-code">{currency.code}</span>
               </div>
             </div>
-            
+
             <div className="currency-details">
               <div className="detail-row">
                 <span className="label">Symbol Position:</span>
@@ -586,8 +586,8 @@ const LocalizationPage: React.FC = () => {
                 <span>{(rate as number).toFixed(1)}%</span>
               </div>
               <div className="bar-track">
-                <div 
-                  className="bar-fill" 
+                <div
+                  className="bar-fill"
                   style={{ width: `${rate}%` }}
                 />
               </div>
@@ -613,35 +613,35 @@ const LocalizationPage: React.FC = () => {
   return (
     <div className="localization-page">
       <div className="localization-tabs">
-        <button 
+        <button
           className={`tab ${activeTab === 'languages' ? 'active' : ''}`}
           onClick={() => setActiveTab('languages')}
         >
           <Languages className="tab-icon" />
           Languages
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'translations' ? 'active' : ''}`}
           onClick={() => setActiveTab('translations')}
         >
           <Globe className="tab-icon" />
           Translations
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'locales' ? 'active' : ''}`}
           onClick={() => setActiveTab('locales')}
         >
           <MapPin className="tab-icon" />
           Locales
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'currencies' ? 'active' : ''}`}
           onClick={() => setActiveTab('currencies')}
         >
           <DollarSign className="tab-icon" />
           Currencies
         </button>
-        <button 
+        <button
           className={`tab ${activeTab === 'statistics' ? 'active' : ''}`}
           onClick={() => setActiveTab('statistics')}
         >
@@ -670,4 +670,3 @@ const LocalizationPage: React.FC = () => {
   );
 };
 
-export default LocalizationPage;
