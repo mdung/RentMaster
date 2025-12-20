@@ -1,5 +1,7 @@
 package com.rentmaster.property;
 
+import java.math.BigDecimal;
+
 import com.rentmaster.property.dto.RoomCreateDTO;
 import com.rentmaster.property.dto.RoomDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +73,7 @@ public class RoomService {
         }
 
         if (!room.getCode().equals(dto.getCode()) &&
-            roomRepository.existsByPropertyIdAndCode(dto.getPropertyId(), dto.getCode())) {
+                roomRepository.existsByPropertyIdAndCode(dto.getPropertyId(), dto.getCode())) {
             throw new RuntimeException("Room code already exists for this property");
         }
 
@@ -111,4 +113,3 @@ public class RoomService {
         return dto;
     }
 }
-

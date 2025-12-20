@@ -2,6 +2,7 @@ package com.rentmaster.billing.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import java.math.BigDecimal;
 
 public class PaymentCreateDTO {
     @NotNull
@@ -9,7 +10,7 @@ public class PaymentCreateDTO {
 
     @NotNull
     @Positive
-    private Double amount;
+    private BigDecimal amount;
 
     private String method;
     private String note;
@@ -22,11 +23,11 @@ public class PaymentCreateDTO {
         this.invoiceId = invoiceId;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -46,4 +47,3 @@ public class PaymentCreateDTO {
         this.note = note;
     }
 }
-

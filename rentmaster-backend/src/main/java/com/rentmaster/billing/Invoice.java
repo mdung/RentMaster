@@ -1,8 +1,10 @@
 package com.rentmaster.billing;
 
 import com.rentmaster.contract.Contract;
+import com.rentmaster.multitenancy.Organization;
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -20,6 +22,10 @@ public class Invoice {
     @JoinColumn(name = "contract_id", nullable = false)
     private Contract contract;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
+
     @Column(name = "period_start", nullable = false)
     private LocalDate periodStart;
 
@@ -32,8 +38,8 @@ public class Invoice {
     @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
 
-    @Column(name = "total_amount", nullable = false)
-    private Double totalAmount;
+    @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -96,11 +102,11 @@ public class Invoice {
         this.dueDate = dueDate;
     }
 
-    public Double getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 
@@ -135,5 +141,18 @@ public class Invoice {
     public void setPayments(List<Payment> payments) {
         this.payments = payments;
     }
-}
 
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public BigDecimal getPaidAmount() {
+        return payments.stream()
+                .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public BigDecimal getRemainingAmount() {
+        return (totalAmount != null ? totalAmount : BigDecimal.ZERO).subtract(getPaidAmount());
+    }
+}

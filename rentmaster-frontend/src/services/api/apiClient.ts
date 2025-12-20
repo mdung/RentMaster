@@ -15,6 +15,11 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Add organization context header
+    const organizationId = localStorage.getItem('currentOrganizationId');
+    if (organizationId) {
+      config.headers['X-Organization-Id'] = organizationId;
+    }
     return config;
   },
   (error) => {

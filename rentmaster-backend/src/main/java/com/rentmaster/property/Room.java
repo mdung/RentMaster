@@ -1,6 +1,7 @@
 package com.rentmaster.property;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "rooms")
@@ -23,15 +24,15 @@ public class Room {
     @Column(length = 100)
     private String type;
 
-    @Column(name = "size_m2")
-    private Double sizeM2;
+    @Column(name = "size_m2", precision = 10, scale = 2)
+    private BigDecimal sizeM2;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private RoomStatus status;
 
-    @Column(name = "base_rent", nullable = false)
-    private Double baseRent;
+    @Column(name = "base_rent", nullable = false, precision = 12, scale = 2)
+    private BigDecimal baseRent;
 
     private Integer capacity;
 
@@ -77,11 +78,11 @@ public class Room {
         this.type = type;
     }
 
-    public Double getSizeM2() {
+    public BigDecimal getSizeM2() {
         return sizeM2;
     }
 
-    public void setSizeM2(Double sizeM2) {
+    public void setSizeM2(BigDecimal sizeM2) {
         this.sizeM2 = sizeM2;
     }
 
@@ -93,11 +94,11 @@ public class Room {
         this.status = status;
     }
 
-    public Double getBaseRent() {
+    public BigDecimal getBaseRent() {
         return baseRent;
     }
 
-    public void setBaseRent(Double baseRent) {
+    public void setBaseRent(BigDecimal baseRent) {
         this.baseRent = baseRent;
     }
 
@@ -117,5 +118,3 @@ public class Room {
         this.notes = notes;
     }
 }
-
-

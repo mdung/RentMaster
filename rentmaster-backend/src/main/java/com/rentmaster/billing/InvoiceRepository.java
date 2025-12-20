@@ -21,5 +21,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+
+    Invoice findTopByContractIdOrderByPeriodEndDesc(Long contractId);
 }
 

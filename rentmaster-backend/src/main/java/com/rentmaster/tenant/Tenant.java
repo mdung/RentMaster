@@ -1,5 +1,6 @@
 package com.rentmaster.tenant;
 
+import com.rentmaster.multitenancy.Organization;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -11,6 +12,10 @@ public class Tenant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;
@@ -95,6 +100,14 @@ public class Tenant {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
     }
 }
 

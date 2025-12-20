@@ -2,6 +2,7 @@ package com.rentmaster.billing;
 
 import com.rentmaster.contract.Contract;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "contract_services")
@@ -19,8 +20,8 @@ public class ContractService {
     @JoinColumn(name = "service_id", nullable = false)
     private Service service;
 
-    @Column(name = "custom_price")
-    private Double customPrice;
+    @Column(name = "custom_price", precision = 12, scale = 4)
+    private BigDecimal customPrice;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -49,11 +50,11 @@ public class ContractService {
         this.service = service;
     }
 
-    public Double getCustomPrice() {
+    public BigDecimal getCustomPrice() {
         return customPrice;
     }
 
-    public void setCustomPrice(Double customPrice) {
+    public void setCustomPrice(BigDecimal customPrice) {
         this.customPrice = customPrice;
     }
 
@@ -65,4 +66,3 @@ public class ContractService {
         this.active = active;
     }
 }
-

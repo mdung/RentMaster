@@ -1,0 +1,208 @@
+You are a senior UI/UX designer tasked with creating a complete design system and interface designs for RentMaster, a room rental management web application.
+
+PROJECT OVERVIEW:
+RentMaster is a React + TypeScript web application for property managers to manage properties, rooms, tenants, rental contracts, invoices, and payments. The current UI is basic and needs a complete modern redesign.
+
+CURRENT STATE:
+- Basic sidebar navigation + main content layout
+- 7 pages: Login, Dashboard, Properties & Rooms, Tenants, Contracts, Invoices, Payments
+- Minimal styling, no design system
+- Dark sidebar (#2c3e50), white content area
+- Basic tables, forms, modals without modern styling
+
+DESIGN REQUIREMENTS:
+
+STYLE & AESTHETIC:
+- Modern SaaS application style (similar to Stripe Dashboard, Linear, or Notion)
+- Clean, professional, minimal but data-dense
+- Color palette: Professional blue primary (#3B82F6 or #2563EB), semantic colors (green success, amber warning, red error), neutral grays
+- Typography: Modern sans-serif (Inter or system fonts), clear hierarchy
+- Spacing: Consistent 4px/8px scale
+- Components: Modern cards with shadows, clean tables, polished forms
+
+PAGES TO DESIGN:
+
+1. LOGIN PAGE
+- Centered login form with brand
+- Error message display
+- Loading state on submit
+- Clean, minimal design
+
+2. DASHBOARD PAGE
+- Grid of 6-8 stat cards showing: Total Rooms, Occupied, Available, Maintenance, Active Contracts, Monthly Revenue, Total Outstanding
+- Charts section: Revenue trend (line chart), Occupancy rate (bar/pie), Payment status distribution
+- Recent activity feed
+- Upcoming due dates list
+- Quick action buttons
+
+3. PROPERTIES & ROOMS PAGE
+- Property cards in grid layout (name, address, room count, actions)
+- When property selected: Rooms table (Code, Floor, Type, Status badge, Base Rent, Actions)
+- Add Property/Room buttons
+- Search and filter bar
+- Modal forms for create/edit
+
+4. TENANTS PAGE
+- Data table: Name, Phone, Email, ID Number, Address, Actions
+- Add Tenant button
+- Search and filter
+- Tenant detail modal
+
+5. CONTRACTS PAGE
+- Table: Code, Room, Tenant, Start/End Date, Rent Amount, Status badge, Actions
+- Add Contract button
+- Filter by status, property, date
+- Comprehensive contract form modal
+
+6. INVOICES PAGE
+- Table: Invoice #, Contract, Tenant, Period, Amount, Status badge, Due Date, Actions
+- Generate Invoice button (prominent)
+- Filter by status, date range
+- Invoice detail view with items and payments
+- PDF export button (if applicable)
+
+7. PAYMENTS PAGE
+- Table: Payment #, Invoice, Amount, Date, Method, Actions
+- Add Payment button
+- Filter by invoice, date
+- Payment form modal
+
+COMPONENT SPECIFICATIONS:
+
+SIDEBAR:
+- Modern sidebar with icons for each menu item
+- Active state clearly visible
+- User profile section at bottom
+- Smooth hover effects
+- Logo/branding at top
+
+HEADER:
+- Clean header with page title
+- Global search bar
+- User menu dropdown (profile, settings, logout)
+- Notification bell (optional)
+- Contextual action buttons
+
+TABLES:
+- Modern design with alternating row colors (subtle)
+- Hover effects on rows
+- Sortable columns with visual indicators
+- Filter/search bar above
+- Pagination controls (modern style)
+- Action buttons with icons
+- Status badges (color-coded pills)
+- Responsive design
+
+FORMS & MODALS:
+- Centered modal with backdrop
+- Clean header with title and close button
+- Well-organized form fields
+- Clear labels and validation messages
+- Loading states on submit
+- Primary (Save) and Secondary (Cancel) buttons
+
+BUTTONS:
+- Primary: Solid, prominent color
+- Secondary: Outlined or ghost style
+- Danger: Red for delete actions
+- Icon buttons for actions
+- Loading states with spinner
+- Hover effects
+
+STATUS BADGES:
+- Color-coded pills for all statuses:
+  - Contract: Active (green), Pending (amber), Terminated (gray), Expired (red)
+  - Invoice: Paid (green), Pending (amber), Overdue (red), Partially Paid (blue)
+  - Room: Available (green), Occupied (blue), Maintenance (orange)
+
+CARDS:
+- Property cards, invoice cards, contract cards
+- Shadow/elevation
+- Hover effects
+- Clear information hierarchy
+
+EMPTY STATES:
+- Friendly illustrations or icons
+- Helpful message
+- Call-to-action button
+
+LOADING STATES:
+- Skeleton screens for tables/lists
+- Spinner for buttons/actions
+- Smooth transitions
+
+ERROR STATES:
+- Clear error messages
+- Helpful guidance
+- Retry actions
+
+UX REQUIREMENTS:
+- Smooth animations and transitions (subtle, purposeful)
+- Toast notifications for actions
+- Confirmation dialogs for destructive actions
+- Responsive design (desktop-first, tablet/mobile adapted)
+- Keyboard navigation support
+- WCAG 2.1 AA accessibility compliance
+- Search and filtering UI
+- Data visualization with modern charts
+
+DESIGN SYSTEM DELIVERABLES NEEDED:
+
+1. COLOR PALETTE:
+   - Primary colors (exact hex codes)
+   - Secondary colors
+   - Semantic colors (success, warning, error)
+   - Neutral grays (text, borders, backgrounds)
+   - Background colors
+
+2. TYPOGRAPHY:
+   - Font family recommendations
+   - Heading sizes (H1, H2, H3)
+   - Body text size and line height
+   - Label and caption styles
+
+3. SPACING SYSTEM:
+   - Consistent spacing scale (4px, 8px, 12px, 16px, 24px, 32px, 48px)
+
+4. COMPONENT LIBRARY:
+   - Detailed specs for all components
+   - All states (default, hover, active, disabled, error, loading)
+   - Responsive behavior
+   - Interaction patterns
+
+5. SHADOW/ELEVATION SYSTEM:
+   - Card shadows
+   - Modal shadows
+   - Dropdown shadows
+
+6. ICON RECOMMENDATIONS:
+   - Icon library (Heroicons, Feather, or Lucide)
+   - Icon usage guidelines
+
+7. CHART STYLING:
+   - Chart color schemes
+   - Chart library recommendations (Recharts, Chart.js)
+
+IMPLEMENTATION RECOMMENDATIONS:
+- CSS approach (Tailwind CSS recommended, or styled-components, CSS modules)
+- Component structure suggestions
+- Animation implementation notes
+- Accessibility implementation notes
+
+SUCCESS CRITERIA:
+The design should be professional, modern, intuitive, consistent, accessible, and performant. It should feel like a premium SaaS product that property managers will enjoy using daily.
+
+DESIGN PHILOSOPHY:
+Create a UI that feels professional, trustworthy, and efficient. Every interaction should be smooth, data should be easy to find, and actions should be clear and intuitive. The design should inspire confidence in the users.
+
+Please provide:
+1. Complete design system documentation with exact values
+2. Detailed designs for all 7 pages (desktop layouts)
+3. Responsive breakpoint designs
+4. Component specifications with all states
+5. Implementation recommendations
+6. Color codes, typography specs, spacing values
+7. Any additional design assets or guidelines needed
+
+
+

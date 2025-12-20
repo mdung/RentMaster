@@ -1,0 +1,603 @@
+/* Automation Page Styles */
+.automation-page {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.automation-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.automation-header h1 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.automation-header p {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Tabs */
+.automation-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.tab-button:hover {
+  background: var(--hover-color);
+  color: var(--text-primary);
+}
+
+.tab-button.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tab-button i {
+  font-size: 16px;
+}
+
+/* Loading */
+.automation-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Overview Tab */
+.automation-overview-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+}
+
+.stat-content h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 5px 0;
+  line-height: 1;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.overview-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.section {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+}
+
+.section h3 {
+  margin: 0 0 20px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.summary-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.summary-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: var(--background-color);
+  border-radius: 8px;
+}
+
+.activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.activity-icon.success {
+  background: var(--success-color);
+}
+
+.activity-icon.info {
+  background: var(--info-color);
+}
+
+.activity-icon.warning {
+  background: var(--warning-color);
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-details p {
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.activity-time {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Tab Headers */
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.tab-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 24px;
+}
+
+.add-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.add-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Card Lists */
+.invoices-list,
+.renewals-list,
+.reports-list,
+.rules-list,
+.executions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Card Styles */
+.invoice-card,
+.renewal-card,
+.report-card,
+.rule-card,
+.execution-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.invoice-card:hover,
+.renewal-card:hover,
+.report-card:hover,
+.rule-card:hover,
+.execution-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Headers */
+.invoice-header,
+.renewal-header,
+.report-header,
+.rule-header,
+.execution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.invoice-header h4,
+.renewal-header h4,
+.report-header h4,
+.rule-header h4,
+.execution-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-badge.inactive {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.status-badge.pending {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.status-badge.sent {
+  background: var(--info-light);
+  color: var(--info-color);
+}
+
+.status-badge.success {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-badge.failed {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.status-badge.partial {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+/* Card Details */
+.invoice-details,
+.renewal-details,
+.report-details,
+.rule-details,
+.execution-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.invoice-details p,
+.renewal-details p,
+.report-details p,
+.rule-details p,
+.execution-details p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.rule-description {
+  grid-column: 1 / -1;
+  color: var(--text-primary) !important;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+/* Renewal Terms */
+.renewal-terms {
+  background: var(--background-color);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.renewal-terms h5 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.renewal-terms p {
+  margin: 0 0 5px 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+/* Action Buttons */
+.invoice-actions,
+.renewal-actions,
+.report-actions,
+.rule-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.action-button.primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.action-button.primary:hover {
+  background: var(--primary-hover);
+}
+
+.action-button.secondary {
+  background: var(--info-light);
+  color: var(--info-color);
+}
+
+.action-button.secondary:hover {
+  background: var(--info-color);
+  color: white;
+}
+
+.action-button.warning {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.action-button.warning:hover {
+  background: var(--warning-color);
+  color: white;
+}
+
+.action-button.danger {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.action-button.danger:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* Execution History Specific */
+.history-filters {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.filter-select,
+.filter-date {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-background);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.execution-results {
+  margin-top: 15px;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.result-item.success {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.result-item.failed {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.result-action {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.result-message {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .overview-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .automation-page {
+    padding: 15px;
+  }
+
+  .automation-tabs {
+    flex-wrap: wrap;
+  }
+
+  .overview-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .history-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .invoice-details,
+  .renewal-details,
+  .report-details,
+  .rule-details,
+  .execution-details {
+    grid-template-columns: 1fr;
+  }
+
+  .invoice-actions,
+  .renewal-actions,
+  .report-actions,
+  .rule-actions {
+    flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .result-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+}

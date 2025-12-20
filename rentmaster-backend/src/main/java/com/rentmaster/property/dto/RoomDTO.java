@@ -1,5 +1,7 @@
 package com.rentmaster.property.dto;
 
+import java.math.BigDecimal;
+
 public class RoomDTO {
     private Long id;
     private Long propertyId;
@@ -7,14 +9,11 @@ public class RoomDTO {
     private String code;
     private String floor;
     private String type;
-    private Double sizeM2;
+    private BigDecimal sizeM2;
     private String status;
-    private Double baseRent;
+    private BigDecimal baseRent;
     private Integer capacity;
     private String notes;
-
-    public RoomDTO() {
-    }
 
     public Long getId() {
         return id;
@@ -64,11 +63,11 @@ public class RoomDTO {
         this.type = type;
     }
 
-    public Double getSizeM2() {
+    public BigDecimal getSizeM2() {
         return sizeM2;
     }
 
-    public void setSizeM2(Double sizeM2) {
+    public void setSizeM2(BigDecimal sizeM2) {
         this.sizeM2 = sizeM2;
     }
 
@@ -80,11 +79,11 @@ public class RoomDTO {
         this.status = status;
     }
 
-    public Double getBaseRent() {
+    public BigDecimal getBaseRent() {
         return baseRent;
     }
 
-    public void setBaseRent(Double baseRent) {
+    public void setBaseRent(BigDecimal baseRent) {
         this.baseRent = baseRent;
     }
 
@@ -104,4 +103,3 @@ public class RoomDTO {
         this.notes = notes;
     }
 }
-

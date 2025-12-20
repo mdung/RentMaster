@@ -3,7 +3,7 @@ package com.rentmaster.contract.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -26,9 +26,9 @@ public class ContractCreateDTO {
 
     @NotNull
     @Positive
-    private Double rentAmount;
+    private BigDecimal rentAmount;
 
-    private Double depositAmount;
+    private BigDecimal depositAmount;
 
     @NotBlank
     private String billingCycle;
@@ -84,19 +84,19 @@ public class ContractCreateDTO {
         this.endDate = endDate;
     }
 
-    public Double getRentAmount() {
+    public BigDecimal getRentAmount() {
         return rentAmount;
     }
 
-    public void setRentAmount(Double rentAmount) {
+    public void setRentAmount(BigDecimal rentAmount) {
         this.rentAmount = rentAmount;
     }
 
-    public Double getDepositAmount() {
+    public BigDecimal getDepositAmount() {
         return depositAmount;
     }
 
-    public void setDepositAmount(Double depositAmount) {
+    public void setDepositAmount(BigDecimal depositAmount) {
         this.depositAmount = depositAmount;
     }
 
@@ -116,4 +116,3 @@ public class ContractCreateDTO {
         this.status = status;
     }
 }
-

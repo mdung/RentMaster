@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -75,15 +76,14 @@ public class InvoiceService {
         invoice.setPeriodStart(dto.getPeriodStart());
         invoice.setPeriodEnd(dto.getPeriodEnd());
         invoice.setIssueDate(dto.getIssueDate() != null ? dto.getIssueDate() : LocalDate.now());
-        invoice.setDueDate(dto.getDueDate() != null ? dto.getDueDate() : 
-                invoice.getIssueDate().plusDays(7));
+        invoice.setDueDate(dto.getDueDate() != null ? dto.getDueDate() : invoice.getIssueDate().plusDays(7));
 
-        double totalAmount = 0.0;
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         // Add rent item
         InvoiceItem rentItem = new InvoiceItem();
         rentItem.setInvoice(invoice);
-        Service rentService = serviceRepository.findByActiveTrue().stream()
+        com.rentmaster.billing.Service rentService = serviceRepository.findByActiveTrue().stream()
                 .filter(s -> s.getType() == ServiceType.RENT)
                 .findFirst()
                 .orElse(null);
@@ -93,17 +93,23 @@ public class InvoiceService {
         } else {
             rentItem.setDescription("Tiền phòng");
         }
-        rentItem.setQuantity(1.0);
+        rentItem.setQuantity(BigDecimal.ONE);
         rentItem.setUnitPrice(contract.getRentAmount());
         rentItem.setAmount(contract.getRentAmount());
-        totalAmount += contract.getRentAmount();
+        totalAmount = totalAmount.add(contract.getRentAmount());
         invoice.getItems().add(rentItem);
 
         // Add contract services
-        List<ContractService> contractServices = contractServiceRepository.findByContractIdAndActiveTrue(dto.getContractId());
+        List<ContractService> contractServices = contractServiceRepository
+                .findByContractIdAndActiveTrue(dto.getContractId());
+
+        // Prepare meter readings lookup (serviceId -> currentIndex)
+        List<MeterReadingInputDTO> meterReadings = dto.getMeterReadings();
+
         for (ContractService cs : contractServices) {
-            Service service = cs.getService();
-            if (!service.isActive()) continue;
+            com.rentmaster.billing.Service service = cs.getService();
+            if (!service.isActive())
+                continue;
 
             InvoiceItem item = new InvoiceItem();
             item.setInvoice(invoice);
@@ -111,19 +117,67 @@ public class InvoiceService {
             item.setDescription(service.getName());
 
             if (service.getPricingModel() == PricingModel.FIXED) {
-                double price = cs.getCustomPrice() != null ? cs.getCustomPrice() : service.getUnitPrice();
-                item.setQuantity(1.0);
+                BigDecimal price = cs.getCustomPrice() != null ? cs.getCustomPrice()
+                        : service.getUnitPrice();
+                item.setQuantity(BigDecimal.ONE);
                 item.setUnitPrice(price);
                 item.setAmount(price);
-                totalAmount += price;
+                totalAmount = totalAmount.add(price);
             } else if (service.getPricingModel() == PricingModel.PER_UNIT) {
-                // For per-unit services, we'd need meter readings - simplified here
-                // In real app, you'd pass current index from DTO
-                item.setQuantity(1.0);
-                double unitPrice = cs.getCustomPrice() != null ? cs.getCustomPrice() : service.getUnitPrice();
-                item.setUnitPrice(unitPrice);
-                item.setAmount(unitPrice);
-                totalAmount += unitPrice;
+                BigDecimal unitPrice = cs.getCustomPrice() != null ? cs.getCustomPrice()
+                        : service.getUnitPrice();
+                if (unitPrice == null) {
+                    unitPrice = BigDecimal.ZERO;
+                }
+
+                // Try to find meter reading input for this service
+                BigDecimal currentIndex = null;
+                if (meterReadings != null && !meterReadings.isEmpty()) {
+                    for (MeterReadingInputDTO reading : meterReadings) {
+                        if (reading.getServiceId() != null &&
+                                reading.getServiceId().equals(service.getId()) &&
+                                reading.getCurrentIndex() != null) {
+                            currentIndex = reading.getCurrentIndex();
+                            break;
+                        }
+                    }
+                }
+
+                if (currentIndex != null) {
+                    // Determine previous index from last invoice for this contract & service
+                    BigDecimal prevIndex = BigDecimal.ZERO;
+                    Invoice lastInvoice = invoiceRepository
+                            .findTopByContractIdOrderByPeriodEndDesc(dto.getContractId());
+                    if (lastInvoice != null && lastInvoice.getItems() != null) {
+                        for (InvoiceItem prevItem : lastInvoice.getItems()) {
+                            if (prevItem.getService() != null &&
+                                    prevItem.getService().getId().equals(service.getId()) &&
+                                    prevItem.getCurrentIndex() != null) {
+                                prevIndex = prevItem.getCurrentIndex();
+                                break;
+                            }
+                        }
+                    }
+
+                    BigDecimal usage = currentIndex.subtract(prevIndex);
+                    if (usage.compareTo(BigDecimal.ZERO) < 0) {
+                        usage = BigDecimal.ZERO;
+                    }
+
+                    item.setPrevIndex(prevIndex);
+                    item.setCurrentIndex(currentIndex);
+                    item.setQuantity(usage);
+                    item.setUnitPrice(unitPrice);
+                    BigDecimal amount = usage.multiply(unitPrice);
+                    item.setAmount(amount);
+                    totalAmount = totalAmount.add(amount);
+                } else {
+                    // Fallback: treat as one unit without meter readings
+                    item.setQuantity(BigDecimal.ONE);
+                    item.setUnitPrice(unitPrice);
+                    item.setAmount(unitPrice);
+                    totalAmount = totalAmount.add(unitPrice);
+                }
             }
 
             invoice.getItems().add(item);
@@ -140,12 +194,13 @@ public class InvoiceService {
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new RuntimeException("Invoice not found"));
 
-        Double totalPaid = paymentRepository.getTotalPaidForInvoice(invoiceId);
-        if (totalPaid == null) totalPaid = 0.0;
+        BigDecimal totalPaid = paymentRepository.getTotalPaidForInvoice(invoiceId);
+        if (totalPaid == null)
+            totalPaid = BigDecimal.ZERO;
 
-        if (totalPaid >= invoice.getTotalAmount()) {
+        if (totalPaid.compareTo(invoice.getTotalAmount()) >= 0) {
             invoice.setStatus(InvoiceStatus.PAID);
-        } else if (totalPaid > 0) {
+        } else if (totalPaid.compareTo(BigDecimal.ZERO) > 0) {
             invoice.setStatus(InvoiceStatus.PARTIALLY_PAID);
         } else {
             if (LocalDate.now().isAfter(invoice.getDueDate())) {
@@ -170,12 +225,13 @@ public class InvoiceService {
         dto.setIssueDate(invoice.getIssueDate());
         dto.setDueDate(invoice.getDueDate());
         dto.setTotalAmount(invoice.getTotalAmount());
-        
-        Double paidAmount = paymentRepository.getTotalPaidForInvoice(invoice.getId());
-        if (paidAmount == null) paidAmount = 0.0;
+
+        BigDecimal paidAmount = paymentRepository.getTotalPaidForInvoice(invoice.getId());
+        if (paidAmount == null)
+            paidAmount = BigDecimal.ZERO;
         dto.setPaidAmount(paidAmount);
-        dto.setRemainingAmount(invoice.getTotalAmount() - paidAmount);
-        
+        dto.setRemainingAmount(invoice.getTotalAmount().subtract(paidAmount));
+
         dto.setStatus(invoice.getStatus().name());
         dto.setCreatedAt(invoice.getCreatedAt());
 
@@ -212,4 +268,3 @@ public class InvoiceService {
         return dto;
     }
 }
-

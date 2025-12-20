@@ -1,6 +1,8 @@
 package com.rentmaster.billing;
 
+import com.rentmaster.multitenancy.Organization;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "services")
@@ -9,6 +11,10 @@ public class Service {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -21,8 +27,8 @@ public class Service {
     @Column(name = "pricing_model", nullable = false, length = 50)
     private PricingModel pricingModel;
 
-    @Column(name = "unit_price")
-    private Double unitPrice;
+    @Column(name = "unit_price", precision = 12, scale = 4)
+    private BigDecimal unitPrice;
 
     @Column(name = "unit_name", length = 50)
     private String unitName;
@@ -62,11 +68,11 @@ public class Service {
         this.pricingModel = pricingModel;
     }
 
-    public Double getUnitPrice() {
+    public BigDecimal getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(Double unitPrice) {
+    public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
     }
 
@@ -85,5 +91,12 @@ public class Service {
     public void setActive(boolean active) {
         this.active = active;
     }
-}
 
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
+}

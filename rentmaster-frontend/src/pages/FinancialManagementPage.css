@@ -1,0 +1,830 @@
+/* Financial Management Styles */
+.financial-management {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.financial-management-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.financial-management-header h1 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.financial-management-header p {
+  color: var(--text-secondary);
+  font-size: 16px;
+}
+
+/* Tabs */
+.financial-management-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.tab-button:hover {
+  background: var(--hover-color);
+  color: var(--text-primary);
+}
+
+.tab-button.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.tab-button i {
+  font-size: 16px;
+}
+
+/* Loading */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-secondary);
+}
+
+.loading-spinner i {
+  font-size: 32px;
+  margin-bottom: 15px;
+  color: var(--primary-color);
+}
+
+/* Overview Tab */
+.financial-overview-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.stat-card.revenue .stat-icon {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.stat-card.expenses .stat-icon {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.stat-card.profit .stat-icon {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.stat-card.cash-flow .stat-icon {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.stat-content h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 5px 0;
+}
+
+.stat-period {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.overview-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+}
+
+.section {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+}
+
+.section h3 {
+  margin: 0 0 20px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+}
+
+.average-stats,
+.outstanding-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.average-item,
+.outstanding-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.average-item:last-child,
+.outstanding-item:last-child {
+  border-bottom: none;
+}
+
+.average-item .label,
+.outstanding-item .label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.average-item .value,
+.outstanding-item .value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Expenses Tab */
+.expenses-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.expenses-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.expenses-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.add-expense-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.add-expense-button:hover {
+  background: var(--primary-hover);
+}
+
+.expenses-filters {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 20px;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.filter-select,
+.filter-date {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--input-background);
+  color: var(--text-primary);
+}
+
+.filter-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filter-button:hover {
+  background: var(--primary-hover);
+}
+
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.expense-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.expense-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.expense-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.expense-amount {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.expense-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.expense-details p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.expense-notes {
+  background: var(--background-color);
+  padding: 12px;
+  border-radius: 6px;
+  margin: 15px 0;
+  color: var(--text-primary);
+  font-style: italic;
+}
+
+.expense-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-button,
+.delete-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.edit-button {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.delete-button {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.edit-button:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.delete-button:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+/* Reports Tab */
+.reports-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reports-tab h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.report-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+
+.report-card h4 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+}
+
+.report-card p {
+  margin: 0 0 20px 0;
+  color: var(--text-secondary);
+}
+
+.generate-report-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.generate-report-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Deposits Tab */
+.deposits-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.deposits-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deposits-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.deposits-summary {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.deposits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.deposit-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.deposit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.deposit-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.held {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.status-badge.refunded {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-badge.forfeited {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.deposit-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.deposit-details p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.deposit-deductions {
+  background: var(--background-color);
+  padding: 15px;
+  border-radius: 6px;
+  margin: 15px 0;
+}
+
+.deposit-deductions h5 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.deduction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.deposit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.refund-button {
+  background: var(--success-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.refund-button:hover {
+  background: var(--success-hover);
+}
+
+/* Payment Plans Tab */
+.payment-plans-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.payment-plans-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-plans-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.create-plan-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.create-plan-button:hover {
+  background: var(--primary-hover);
+}
+
+.payment-plans-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.payment-plan-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.plan-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.status-badge.active {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.status-badge.completed {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.status-badge.defaulted {
+  background: var(--danger-light);
+  color: var(--danger-color);
+}
+
+.plan-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.plan-details p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.plan-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.view-schedule-button,
+.edit-plan-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.view-schedule-button {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.edit-plan-button {
+  background: var(--warning-light);
+  color: var(--warning-color);
+}
+
+.view-schedule-button:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.edit-plan-button:hover {
+  background: var(--warning-color);
+  color: white;
+}
+
+/* Currencies Tab */
+.currencies-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.currencies-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.currencies-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.add-currency-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.add-currency-button:hover {
+  background: var(--primary-hover);
+}
+
+.currencies-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.currency-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.currency-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.currency-header h4 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.currency-symbol {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.currency-details {
+  margin-bottom: 15px;
+}
+
+.currency-details p {
+  margin: 0 0 8px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.default-badge {
+  background: var(--primary-color);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.currency-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-currency-button,
+.set-default-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.edit-currency-button {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.set-default-button {
+  background: var(--success-light);
+  color: var(--success-color);
+}
+
+.edit-currency-button:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.set-default-button:hover {
+  background: var(--success-color);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .financial-management {
+    padding: 15px;
+  }
+
+  .financial-management-tabs {
+    flex-wrap: wrap;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .expenses-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .expense-details,
+  .deposit-details,
+  .plan-details {
+    grid-template-columns: 1fr;
+  }
+
+  .expenses-header,
+  .deposits-header,
+  .payment-plans-header,
+  .currencies-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+
+  .currencies-list {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+}

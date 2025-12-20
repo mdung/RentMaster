@@ -1,7 +1,7 @@
 package com.rentmaster.billing;
 
 import jakarta.persistence.*;
-
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -16,8 +16,8 @@ public class Payment {
     @JoinColumn(name = "invoice_id", nullable = false)
     private Invoice invoice;
 
-    @Column(nullable = false)
-    private Double amount;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal amount;
 
     @Column(name = "paid_at", nullable = false, updatable = false)
     private Instant paidAt = Instant.now();
@@ -44,11 +44,11 @@ public class Payment {
         this.invoice = invoice;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -76,4 +76,3 @@ public class Payment {
         this.note = note;
     }
 }
-

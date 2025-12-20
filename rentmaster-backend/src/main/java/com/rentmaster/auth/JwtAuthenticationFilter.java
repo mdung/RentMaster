@@ -1,5 +1,7 @@
 package com.rentmaster.auth;
 
+import com.rentmaster.multitenancy.OrganizationContext;
+import com.rentmaster.multitenancy.OrganizationRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,24 +23,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private OrganizationContext organizationContext;
+
+    @Autowired
+    private OrganizationRepository organizationRepository;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
         final String authorizationHeader = request.getHeader("Authorization");
+        final String organizationHeader = request.getHeader("X-Organization-Id");
 
         String username = null;
         String jwt = null;
         String role = null;
+        Long organizationId = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
                 role = jwtUtil.extractRole(jwt);
+                organizationId = jwtUtil.extractOrganizationId(jwt);
             } catch (Exception e) {
                 // Invalid token, continue without authentication
             }
+        }
+
+        // Set organization context from header or JWT
+        if (organizationHeader != null && !organizationHeader.isEmpty()) {
+            try {
+                Long orgId = Long.parseLong(organizationHeader);
+                organizationRepository.findById(orgId).ifPresent(org -> {
+                    organizationContext.setOrganization(org);
+                });
+            } catch (NumberFormatException e) {
+                // Invalid organization ID, ignore
+            }
+        } else if (organizationId != null) {
+            organizationRepository.findById(organizationId).ifPresent(org -> {
+                organizationContext.setOrganization(org);
+            });
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

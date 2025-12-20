@@ -1,5 +1,6 @@
 package com.rentmaster.billing.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -14,9 +15,9 @@ public class InvoiceDTO {
     private LocalDate periodEnd;
     private LocalDate issueDate;
     private LocalDate dueDate;
-    private Double totalAmount;
-    private Double paidAmount;
-    private Double remainingAmount;
+    private BigDecimal totalAmount;
+    private BigDecimal paidAmount;
+    private BigDecimal remainingAmount;
     private String status;
     private Instant createdAt;
     private List<InvoiceItemDTO> items;
@@ -97,27 +98,27 @@ public class InvoiceDTO {
         this.dueDate = dueDate;
     }
 
-    public Double getTotalAmount() {
+    public BigDecimal getTotalAmount() {
         return totalAmount;
     }
 
-    public void setTotalAmount(Double totalAmount) {
+    public void setTotalAmount(BigDecimal totalAmount) {
         this.totalAmount = totalAmount;
     }
 
-    public Double getPaidAmount() {
+    public BigDecimal getPaidAmount() {
         return paidAmount;
     }
 
-    public void setPaidAmount(Double paidAmount) {
+    public void setPaidAmount(BigDecimal paidAmount) {
         this.paidAmount = paidAmount;
     }
 
-    public Double getRemainingAmount() {
+    public BigDecimal getRemainingAmount() {
         return remainingAmount;
     }
 
-    public void setRemainingAmount(Double remainingAmount) {
+    public void setRemainingAmount(BigDecimal remainingAmount) {
         this.remainingAmount = remainingAmount;
     }
 
@@ -153,4 +154,3 @@ public class InvoiceDTO {
         this.payments = payments;
     }
 }
-

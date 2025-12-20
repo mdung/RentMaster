@@ -8,6 +8,12 @@ export interface PaymentCreateRequest {
   note?: string;
 }
 
+export interface PaymentUpdateRequest {
+  amount?: number;
+  method?: string;
+  note?: string;
+}
+
 export const paymentApi = {
   getAll: async (): Promise<Payment[]> => {
     const response = await apiClient.get<Payment[]>('/payments');
@@ -23,6 +29,10 @@ export const paymentApi = {
   },
   create: async (data: PaymentCreateRequest): Promise<Payment> => {
     const response = await apiClient.post<Payment>('/payments', data);
+    return response.data;
+  },
+  update: async (id: number, data: PaymentUpdateRequest): Promise<Payment> => {
+    const response = await apiClient.put<Payment>(`/payments/${id}`, data);
     return response.data;
   },
   delete: async (id: number): Promise<void> => {

@@ -1,5 +1,6 @@
 package com.rentmaster.contract.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -15,8 +16,8 @@ public class ContractDTO {
     private List<Long> tenantIds;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Double rentAmount;
-    private Double depositAmount;
+    private BigDecimal rentAmount;
+    private BigDecimal depositAmount;
     private String billingCycle;
     private String status;
     private Instant createdAt;
@@ -104,19 +105,19 @@ public class ContractDTO {
         this.endDate = endDate;
     }
 
-    public Double getRentAmount() {
+    public BigDecimal getRentAmount() {
         return rentAmount;
     }
 
-    public void setRentAmount(Double rentAmount) {
+    public void setRentAmount(BigDecimal rentAmount) {
         this.rentAmount = rentAmount;
     }
 
-    public Double getDepositAmount() {
+    public BigDecimal getDepositAmount() {
         return depositAmount;
     }
 
-    public void setDepositAmount(Double depositAmount) {
+    public void setDepositAmount(BigDecimal depositAmount) {
         this.depositAmount = depositAmount;
     }
 
@@ -144,4 +145,3 @@ public class ContractDTO {
         this.createdAt = createdAt;
     }
 }
-

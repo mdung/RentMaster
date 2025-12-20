@@ -1,0 +1,28 @@
+.bar-chart {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.bar-segment {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bar-segment:hover {
+  filter: brightness(1.1);
+  stroke: var(--primary-hover);
+  stroke-width: 2;
+}
+
+.bar-value {
+  font-family: inherit;
+  font-weight: 600;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .bar-value {
+    font-size: 10px;
+  }
+}

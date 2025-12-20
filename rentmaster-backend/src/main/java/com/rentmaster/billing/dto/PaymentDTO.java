@@ -1,11 +1,12 @@
 package com.rentmaster.billing.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 public class PaymentDTO {
     private Long id;
     private Long invoiceId;
-    private Double amount;
+    private BigDecimal amount;
     private Instant paidAt;
     private String method;
     private String note;
@@ -29,11 +30,11 @@ public class PaymentDTO {
         this.invoiceId = invoiceId;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
@@ -61,4 +62,3 @@ public class PaymentDTO {
         this.note = note;
     }
 }
-

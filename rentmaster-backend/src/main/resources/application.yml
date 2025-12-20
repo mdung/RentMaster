@@ -3,8 +3,8 @@ spring:
     name: rentmaster-backend
   datasource:
     url: jdbc:postgresql://localhost:5432/rentmaster
-    username: rentmaster
-    password: rentmaster
+    username: postgres
+    password: postgres
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -17,6 +17,8 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    repair-on-migrate: true
+    out-of-order: true
 
 server:
   port: 8080

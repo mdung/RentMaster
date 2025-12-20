@@ -31,6 +31,26 @@ public class JwtUtil {
         return createToken(claims, username);
     }
 
+    public String generateToken(String username, String role, Long organizationId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        if (organizationId != null) {
+            claims.put("organizationId", organizationId);
+        }
+        return createToken(claims, username);
+    }
+
+    public Long extractOrganizationId(String token) {
+        try {
+            return extractClaim(token, claims -> {
+                Object orgId = claims.get("organizationId");
+                return orgId != null ? Long.parseLong(orgId.toString()) : null;
+            });
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
                 .claims(claims)

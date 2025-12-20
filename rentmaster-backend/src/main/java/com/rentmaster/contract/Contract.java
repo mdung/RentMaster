@@ -1,11 +1,13 @@
 package com.rentmaster.contract;
 
+import com.rentmaster.multitenancy.Organization;
 import com.rentmaster.property.Room;
 import com.rentmaster.tenant.Tenant;
 import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -16,6 +18,10 @@ public class Contract {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @Column(nullable = false, unique = true, length = 100)
     private String code;
@@ -34,11 +40,11 @@ public class Contract {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "rent_amount", nullable = false)
-    private Double rentAmount;
+    @Column(name = "rent_amount", nullable = false, precision = 12, scale = 2)
+    private BigDecimal rentAmount;
 
-    @Column(name = "deposit_amount")
-    private Double depositAmount;
+    @Column(name = "deposit_amount", precision = 12, scale = 2)
+    private BigDecimal depositAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "billing_cycle", nullable = false, length = 50)
@@ -52,11 +58,7 @@ public class Contract {
     private Instant createdAt = Instant.now();
 
     @ManyToMany
-    @JoinTable(
-        name = "contract_tenants",
-        joinColumns = @JoinColumn(name = "contract_id"),
-        inverseJoinColumns = @JoinColumn(name = "tenant_id")
-    )
+    @JoinTable(name = "contract_tenants", joinColumns = @JoinColumn(name = "contract_id"), inverseJoinColumns = @JoinColumn(name = "tenant_id"))
     private Set<Tenant> tenants = new HashSet<>();
 
     public Long getId() {
@@ -107,19 +109,19 @@ public class Contract {
         this.endDate = endDate;
     }
 
-    public Double getRentAmount() {
+    public BigDecimal getRentAmount() {
         return rentAmount;
     }
 
-    public void setRentAmount(Double rentAmount) {
+    public void setRentAmount(BigDecimal rentAmount) {
         this.rentAmount = rentAmount;
     }
 
-    public Double getDepositAmount() {
+    public BigDecimal getDepositAmount() {
         return depositAmount;
     }
 
-    public void setDepositAmount(Double depositAmount) {
+    public void setDepositAmount(BigDecimal depositAmount) {
         this.depositAmount = depositAmount;
     }
 
@@ -154,5 +156,12 @@ public class Contract {
     public void setTenants(Set<Tenant> tenants) {
         this.tenants = tenants;
     }
-}
 
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
+    }
+}

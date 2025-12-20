@@ -1,18 +1,17 @@
 package com.rentmaster.billing.dto;
 
+import java.math.BigDecimal;
+
 public class InvoiceItemDTO {
     private Long id;
     private Long serviceId;
     private String serviceName;
     private String description;
-    private Double quantity;
-    private Double unitPrice;
-    private Double amount;
-    private Double prevIndex;
-    private Double currentIndex;
-
-    public InvoiceItemDTO() {
-    }
+    private BigDecimal quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal amount;
+    private BigDecimal prevIndex;
+    private BigDecimal currentIndex;
 
     public Long getId() {
         return id;
@@ -46,44 +45,43 @@ public class InvoiceItemDTO {
         this.description = description;
     }
 
-    public Double getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Double quantity) {
+    public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }
 
-    public Double getUnitPrice() {
+    public BigDecimal getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(Double unitPrice) {
+    public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
-    public Double getPrevIndex() {
+    public BigDecimal getPrevIndex() {
         return prevIndex;
     }
 
-    public void setPrevIndex(Double prevIndex) {
+    public void setPrevIndex(BigDecimal prevIndex) {
         this.prevIndex = prevIndex;
     }
 
-    public Double getCurrentIndex() {
+    public BigDecimal getCurrentIndex() {
         return currentIndex;
     }
 
-    public void setCurrentIndex(Double currentIndex) {
+    public void setCurrentIndex(BigDecimal currentIndex) {
         this.currentIndex = currentIndex;
     }
 }
-

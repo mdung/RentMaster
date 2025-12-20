@@ -3,6 +3,7 @@ package com.rentmaster.billing.dto;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class InvoiceGenerateDTO {
     @NotNull
@@ -16,6 +17,9 @@ public class InvoiceGenerateDTO {
 
     private LocalDate issueDate;
     private LocalDate dueDate;
+
+    // Optional meter readings for per-unit services (e.g., electricity, water)
+    private List<MeterReadingInputDTO> meterReadings;
 
     public Long getContractId() {
         return contractId;
@@ -55,6 +59,14 @@ public class InvoiceGenerateDTO {
 
     public void setDueDate(LocalDate dueDate) {
         this.dueDate = dueDate;
+    }
+
+    public List<MeterReadingInputDTO> getMeterReadings() {
+        return meterReadings;
+    }
+
+    public void setMeterReadings(List<MeterReadingInputDTO> meterReadings) {
+        this.meterReadings = meterReadings;
     }
 }
 

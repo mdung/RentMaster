@@ -1,5 +1,6 @@
 package com.rentmaster.property;
 
+import com.rentmaster.multitenancy.Organization;
 import jakarta.persistence.*;
 
 import java.time.Instant;
@@ -13,6 +14,10 @@ public class Property {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organization_id")
+    private Organization organization;
 
     @Column(nullable = false, length = 255)
     private String name;
@@ -75,6 +80,14 @@ public class Property {
 
     public void setRooms(List<Room> rooms) {
         this.rooms = rooms;
+    }
+
+    public Organization getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(Organization organization) {
+        this.organization = organization;
     }
 }
 

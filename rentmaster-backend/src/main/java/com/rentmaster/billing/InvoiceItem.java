@@ -1,6 +1,7 @@
 package com.rentmaster.billing;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "invoice_items")
@@ -21,20 +22,20 @@ public class InvoiceItem {
     @Column(length = 500)
     private String description;
 
-    @Column
-    private Double quantity = 1.0;
+    @Column(precision = 12, scale = 3)
+    private BigDecimal quantity = BigDecimal.ONE;
 
-    @Column(name = "unit_price")
-    private Double unitPrice;
+    @Column(name = "unit_price", precision = 12, scale = 4)
+    private BigDecimal unitPrice;
 
-    @Column(nullable = false)
-    private Double amount;
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal amount;
 
-    @Column(name = "prev_index")
-    private Double prevIndex;
+    @Column(name = "prev_index", precision = 12, scale = 3)
+    private BigDecimal prevIndex;
 
-    @Column(name = "current_index")
-    private Double currentIndex;
+    @Column(name = "current_index", precision = 12, scale = 3)
+    private BigDecimal currentIndex;
 
     public Long getId() {
         return id;
@@ -68,44 +69,43 @@ public class InvoiceItem {
         this.description = description;
     }
 
-    public Double getQuantity() {
+    public BigDecimal getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Double quantity) {
+    public void setQuantity(BigDecimal quantity) {
         this.quantity = quantity;
     }
 
-    public Double getUnitPrice() {
+    public BigDecimal getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(Double unitPrice) {
+    public void setUnitPrice(BigDecimal unitPrice) {
         this.unitPrice = unitPrice;
     }
 
-    public Double getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(BigDecimal amount) {
         this.amount = amount;
     }
 
-    public Double getPrevIndex() {
+    public BigDecimal getPrevIndex() {
         return prevIndex;
     }
 
-    public void setPrevIndex(Double prevIndex) {
+    public void setPrevIndex(BigDecimal prevIndex) {
         this.prevIndex = prevIndex;
     }
 
-    public Double getCurrentIndex() {
+    public BigDecimal getCurrentIndex() {
         return currentIndex;
     }
 
-    public void setCurrentIndex(Double currentIndex) {
+    public void setCurrentIndex(BigDecimal currentIndex) {
         this.currentIndex = currentIndex;
     }
 }
-

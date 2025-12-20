@@ -1,27 +1,15 @@
 package com.rentmaster.property.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import java.math.BigDecimal;
 
 public class RoomCreateDTO {
-    @NotNull
     private Long propertyId;
-
-    @NotBlank
     private String code;
-
     private String floor;
     private String type;
-    private Double sizeM2;
-
-    @NotBlank
+    private BigDecimal sizeM2;
     private String status;
-
-    @NotNull
-    @Positive
-    private Double baseRent;
-
+    private BigDecimal baseRent;
     private Integer capacity;
     private String notes;
 
@@ -57,11 +45,11 @@ public class RoomCreateDTO {
         this.type = type;
     }
 
-    public Double getSizeM2() {
+    public BigDecimal getSizeM2() {
         return sizeM2;
     }
 
-    public void setSizeM2(Double sizeM2) {
+    public void setSizeM2(BigDecimal sizeM2) {
         this.sizeM2 = sizeM2;
     }
 
@@ -73,11 +61,11 @@ public class RoomCreateDTO {
         this.status = status;
     }
 
-    public Double getBaseRent() {
+    public BigDecimal getBaseRent() {
         return baseRent;
     }
 
-    public void setBaseRent(Double baseRent) {
+    public void setBaseRent(BigDecimal baseRent) {
         this.baseRent = baseRent;
     }
 
@@ -97,4 +85,3 @@ public class RoomCreateDTO {
         this.notes = notes;
     }
 }
-
