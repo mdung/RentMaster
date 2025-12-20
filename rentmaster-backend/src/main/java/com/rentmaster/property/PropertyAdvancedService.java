@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 @Service
 public class PropertyAdvancedService {
@@ -63,14 +63,17 @@ public class PropertyAdvancedService {
             image.setFilePath(filePath.toString());
             image.setFileSize(file.getSize());
             image.setMimeType(file.getContentType());
-
-            try {
-                image.setImageType(PropertyImage.ImageType.valueOf(category.toUpperCase()));
-            } catch (Exception e) {
-                image.setImageType(PropertyImage.ImageType.OTHER);
+            if (category != null) {
+                try {
+                    image.setImageType(PropertyImage.ImageType.valueOf(category.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    image.setImageType(PropertyImage.ImageType.OTHER);
+                }
             }
-
-            image.setCaption(description);
+            if (description != null) {
+                image.setCaption(description);
+                image.setAltText(description);
+            }
             image.setUploadedAt(LocalDateTime.now());
 
             return propertyImageRepository.save(image);
@@ -113,15 +116,20 @@ public class PropertyAdvancedService {
             floorPlan.setPropertyId(propertyId);
             floorPlan.setName(name);
             floorPlan.setFilename(fileName);
+            floorPlan.setOriginalFilename(file.getOriginalFilename());
             floorPlan.setFilePath(filePath.toString());
             floorPlan.setFileSize(file.getSize());
-            try {
-                if (floor != null)
-                    floorPlan.setFloorNumber(Integer.parseInt(floor.replaceAll("\\D", "")));
-            } catch (Exception e) {
-                floorPlan.setFloorNumber(0);
+            floorPlan.setMimeType(file.getContentType());
+            if (floor != null && !floor.isEmpty()) {
+                try {
+                    floorPlan.setFloorNumber(Integer.parseInt(floor));
+                } catch (NumberFormatException e) {
+                    // If floor is not a number, leave it null
+                }
             }
-            floorPlan.setBedrooms(roomCount);
+            if (roomCount != null) {
+                floorPlan.setBedrooms(roomCount); // Assuming roomCount maps to bedrooms
+            }
             floorPlan.setTotalArea(totalArea);
             floorPlan.setDescription(description);
             floorPlan.setUploadedAt(LocalDateTime.now());
@@ -179,34 +187,49 @@ public class PropertyAdvancedService {
         schedule.setCompletedDate(LocalDateTime.now());
         schedule.setStatus(MaintenanceSchedule.Status.COMPLETED);
 
-        // Calculate next due date based on frequency
-        if (schedule.getRecurrenceType() != null
-                && schedule.getRecurrenceType() != MaintenanceSchedule.RecurrenceType.NONE) {
-            LocalDate nextDueDate = calculateNextDueDate(schedule.getNextDueDate(),
-                    schedule.getRecurrenceType().name());
+        // Calculate next due date based on recurrence type
+        if (schedule.getRecurrenceType() != null && schedule.getRecurrenceType() != MaintenanceSchedule.RecurrenceType.NONE) {
+            LocalDate nextDueDate = calculateNextDueDate(schedule.getNextDueDate() != null ? schedule.getNextDueDate() : LocalDate.now(), schedule.getRecurrenceType());
             schedule.setNextDueDate(nextDueDate);
             schedule.setStatus(MaintenanceSchedule.Status.SCHEDULED);
+        }
+
+        // Update completion data if provided
+        if (completionData != null) {
+            if (completionData.containsKey("actualCost")) {
+                schedule.setActualCost(Double.valueOf(completionData.get("actualCost").toString()));
+            }
+            if (completionData.containsKey("completedBy")) {
+                schedule.setCompletedBy(completionData.get("completedBy").toString());
+            }
+            if (completionData.containsKey("completionNotes")) {
+                schedule.setCompletionNotes(completionData.get("completionNotes").toString());
+            }
         }
 
         maintenanceScheduleRepository.save(schedule);
     }
 
-    private LocalDate calculateNextDueDate(LocalDate currentDate, String frequency) {
-        switch (frequency.toUpperCase()) {
-            case "DAILY":
+    private LocalDate calculateNextDueDate(LocalDate currentDate, MaintenanceSchedule.RecurrenceType recurrenceType) {
+        if (recurrenceType == null) {
+            return currentDate.plusMonths(1);
+        }
+        
+        switch (recurrenceType) {
+            case DAILY:
                 return currentDate.plusDays(1);
-            case "WEEKLY":
+            case WEEKLY:
                 return currentDate.plusWeeks(1);
-            case "BIWEEKLY":
-                return currentDate.plusWeeks(2);
-            case "MONTHLY":
+            case MONTHLY:
                 return currentDate.plusMonths(1);
-            case "QUARTERLY":
+            case QUARTERLY:
                 return currentDate.plusMonths(3);
-            case "SEMI_ANNUALLY":
+            case SEMI_ANNUALLY:
                 return currentDate.plusMonths(6);
-            case "ANNUALLY":
+            case ANNUALLY:
                 return currentDate.plusYears(1);
+            case NONE:
+            case CUSTOM:
             default:
                 return currentDate.plusMonths(1);
         }
@@ -249,14 +272,8 @@ public class PropertyAdvancedService {
     // Property Analytics Methods
     public List<PropertyAnalytics> getPropertyAnalytics(Long propertyId, String startDate, String endDate) {
         if (startDate != null && endDate != null) {
-            try {
-                LocalDate start = LocalDate.parse(startDate);
-                LocalDate end = LocalDate.parse(endDate);
-                return propertyAnalyticsRepository.findByPropertyIdAndDateRange(propertyId, start, end);
-            } catch (Exception e) {
-                // Fallback or error
-                return Collections.emptyList();
-            }
+            return propertyAnalyticsRepository.findByPropertyIdAndDateRange(propertyId, LocalDate.parse(startDate),
+                    LocalDate.parse(endDate));
         }
         return propertyAnalyticsRepository.findByPropertyIdOrderByMetricDateDesc(propertyId);
     }
@@ -265,28 +282,64 @@ public class PropertyAdvancedService {
         Map<String, Object> comparison = new HashMap<>();
 
         for (Long propertyId : propertyIds) {
-            List<PropertyAnalytics> analytics = propertyAnalyticsRepository.findByPropertyId(propertyId);
+            // Get all analytics for the property
+            List<PropertyAnalytics> analytics = propertyAnalyticsRepository
+                    .findByPropertyIdOrderByMetricDateDesc(propertyId);
 
-            Map<PropertyAnalytics.MetricType, Double> latestMetrics = analytics.stream()
-                    .filter(a -> a.getMetricType() != null)
-                    .collect(Collectors.groupingBy(
-                            PropertyAnalytics::getMetricType,
-                            Collectors.collectingAndThen(
-                                    Collectors.maxBy(Comparator.comparing(PropertyAnalytics::getMetricDate)),
-                                    opt -> opt.map(PropertyAnalytics::getValue).orElse(0.0))));
+            if (!analytics.isEmpty()) {
+                // Group by date/month to find the latest set of metrics
+                // Assuming we want the most recent month across all data
+                Map<LocalDate, List<PropertyAnalytics>> byDate = analytics.stream()
+                        .collect(Collectors.groupingBy(PropertyAnalytics::getMetricDate));
 
-            if (!latestMetrics.isEmpty()) {
-                Map<String, Object> propertyData = new HashMap<>();
-                propertyData.put("occupancyRate", latestMetrics.get(PropertyAnalytics.MetricType.OCCUPANCY_RATE));
-                propertyData.put("averageRent", latestMetrics.get(PropertyAnalytics.MetricType.AVERAGE_RENT));
-                propertyData.put("totalRevenue", latestMetrics.get(PropertyAnalytics.MetricType.RENTAL_INCOME));
-                propertyData.put("maintenanceCosts", latestMetrics.get(PropertyAnalytics.MetricType.MAINTENANCE_COST));
-                propertyData.put("profitMargin", latestMetrics.get(PropertyAnalytics.MetricType.PROFIT_MARGIN));
-                propertyData.put("tenantSatisfaction",
-                        latestMetrics.get(PropertyAnalytics.MetricType.TENANT_SATISFACTION));
-                propertyData.put("renewalRate", 0.0);
+                Optional<LocalDate> latestDate = byDate.keySet().stream().max(Comparator.naturalOrder());
 
-                comparison.put("property_" + propertyId, propertyData);
+                if (latestDate.isPresent()) {
+                    List<PropertyAnalytics> latestMetrics = byDate.get(latestDate.get());
+                    Map<String, Object> propertyData = new HashMap<>();
+
+                    // Default values
+                    propertyData.put("occupancyRate", 0.0);
+                    propertyData.put("averageRent", 0.0);
+                    propertyData.put("totalRevenue", 0.0);
+                    propertyData.put("maintenanceCosts", 0.0);
+                    propertyData.put("profitMargin", 0.0);
+                    propertyData.put("tenantSatisfaction", 0.0);
+                    propertyData.put("renewalRate", 0.0);
+
+                    // Populate with actual values
+                    for (PropertyAnalytics metric : latestMetrics) {
+                        if (metric.getValue() != null) {
+                            switch (metric.getMetricType()) {
+                                case OCCUPANCY_RATE:
+                                    propertyData.put("occupancyRate", metric.getValue());
+                                    break;
+                                case AVERAGE_RENT:
+                                    propertyData.put("averageRent", metric.getValue());
+                                    break;
+                                case RENTAL_INCOME: // Assuming TOTAL_REVENUE maps to RENTAL_INCOME or similar
+                                    propertyData.put("totalRevenue", metric.getValue());
+                                    break;
+                                case MAINTENANCE_COST:
+                                    propertyData.put("maintenanceCosts", metric.getValue());
+                                    break;
+                                case PROFIT_MARGIN:
+                                    propertyData.put("profitMargin", metric.getValue());
+                                    break;
+                                case TENANT_SATISFACTION:
+                                    propertyData.put("tenantSatisfaction", metric.getValue());
+                                    break;
+                                case RENEWAL_RATE:
+                                    propertyData.put("renewalRate", metric.getValue());
+                                    break;
+                                default:
+                                    // Ignore other metrics for comparison summary
+                                    break;
+                            }
+                        }
+                    }
+                    comparison.put("property_" + propertyId, propertyData);
+                }
             }
         }
 

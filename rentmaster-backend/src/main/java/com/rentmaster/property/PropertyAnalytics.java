@@ -50,14 +50,14 @@ public class PropertyAnalytics {
     private String calculatedBy;
 
     public enum MetricType {
-        OCCUPANCY_RATE, RENTAL_INCOME, MAINTENANCE_COST, 
-        VACANCY_DAYS, TENANT_TURNOVER, ROI, NOI, 
-        CASH_FLOW, EXPENSE_RATIO, RENT_PER_SQFT, 
-        UTILITY_COST, INSURANCE_COST, TAX_COST, 
+        OCCUPANCY_RATE, RENTAL_INCOME, MAINTENANCE_COST,
+        VACANCY_DAYS, TENANT_TURNOVER, ROI, NOI,
+        CASH_FLOW, EXPENSE_RATIO, RENT_PER_SQFT,
+        UTILITY_COST, INSURANCE_COST, TAX_COST,
         MARKETING_COST, REPAIR_COST, PROFIT_MARGIN,
         AVERAGE_RENT, MARKET_RENT, RENT_GROWTH,
         TENANT_SATISFACTION, MAINTENANCE_REQUESTS,
-        ENERGY_EFFICIENCY, PROPERTY_VALUE
+        ENERGY_EFFICIENCY, PROPERTY_VALUE, RENEWAL_RATE
     }
 
     public enum PeriodType {
@@ -78,42 +78,107 @@ public class PropertyAnalytics {
     }
 
     // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getPropertyId() { return propertyId; }
-    public void setPropertyId(Long propertyId) { this.propertyId = propertyId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public MetricType getMetricType() { return metricType; }
-    public void setMetricType(MetricType metricType) { this.metricType = metricType; }
+    public Long getPropertyId() {
+        return propertyId;
+    }
 
-    public LocalDate getMetricDate() { return metricDate; }
-    public void setMetricDate(LocalDate metricDate) { this.metricDate = metricDate; }
+    public void setPropertyId(Long propertyId) {
+        this.propertyId = propertyId;
+    }
 
-    public Double getValue() { return value; }
-    public void setValue(Double value) { this.value = value; }
+    public MetricType getMetricType() {
+        return metricType;
+    }
 
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
+    public void setMetricType(MetricType metricType) {
+        this.metricType = metricType;
+    }
 
-    public PeriodType getPeriodType() { return periodType; }
-    public void setPeriodType(PeriodType periodType) { this.periodType = periodType; }
+    public LocalDate getMetricDate() {
+        return metricDate;
+    }
 
-    public Integer getYear() { return year; }
-    public void setYear(Integer year) { this.year = year; }
+    public void setMetricDate(LocalDate metricDate) {
+        this.metricDate = metricDate;
+    }
 
-    public Integer getMonth() { return month; }
-    public void setMonth(Integer month) { this.month = month; }
+    public Double getValue() {
+        return value;
+    }
 
-    public Integer getQuarter() { return quarter; }
-    public void setQuarter(Integer quarter) { this.quarter = quarter; }
+    public void setValue(Double value) {
+        this.value = value;
+    }
 
-    public String getNotes() { return notes; }
-    public void setNotes(String notes) { this.notes = notes; }
+    public String getUnit() {
+        return unit;
+    }
 
-    public LocalDateTime getCalculatedAt() { return calculatedAt; }
-    public void setCalculatedAt(LocalDateTime calculatedAt) { this.calculatedAt = calculatedAt; }
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
 
-    public String getCalculatedBy() { return calculatedBy; }
-    public void setCalculatedBy(String calculatedBy) { this.calculatedBy = calculatedBy; }
+    public PeriodType getPeriodType() {
+        return periodType;
+    }
+
+    public void setPeriodType(PeriodType periodType) {
+        this.periodType = periodType;
+    }
+
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    public Integer getQuarter() {
+        return quarter;
+    }
+
+    public void setQuarter(Integer quarter) {
+        this.quarter = quarter;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
+    }
+
+    public LocalDateTime getCalculatedAt() {
+        return calculatedAt;
+    }
+
+    public void setCalculatedAt(LocalDateTime calculatedAt) {
+        this.calculatedAt = calculatedAt;
+    }
+
+    public String getCalculatedBy() {
+        return calculatedBy;
+    }
+
+    public void setCalculatedBy(String calculatedBy) {
+        this.calculatedBy = calculatedBy;
+    }
 }
