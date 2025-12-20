@@ -65,8 +65,14 @@ public class AuthService {
         // Successful login
         handleSuccessfulLogin(user, ipAddress);
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
-        return new LoginResponse(token, user.getUsername(), user.getRole().name(), user.getFullName());
+        // Validate user data before generating token
+        if (user.getRole() == null) {
+            throw new RuntimeException("User role is not set");
+        }
+        
+        String roleName = user.getRole().name();
+        String token = jwtUtil.generateToken(user.getUsername(), roleName);
+        return new LoginResponse(token, user.getUsername(), roleName, user.getFullName() != null ? user.getFullName() : user.getUsername());
     }
 
     @Transactional
@@ -168,8 +174,14 @@ public class AuthService {
         userRepository.save(user);
 
         // Record successful login attempt
-        LoginAttempt attempt = new LoginAttempt(user.getUsername(), ipAddress, true);
-        loginAttemptRepository.save(attempt);
+        try {
+            LoginAttempt attempt = new LoginAttempt(user.getUsername(), ipAddress, true);
+            loginAttemptRepository.save(attempt);
+        } catch (Exception e) {
+            // Log but don't fail login if we can't record the attempt
+            System.err.println("Failed to record successful login attempt: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void handleFailedLogin(User user, String ipAddress) {
@@ -185,8 +197,14 @@ public class AuthService {
     }
 
     private void recordFailedAttempt(String username, String ipAddress) {
-        LoginAttempt attempt = new LoginAttempt(username, ipAddress, false);
-        loginAttemptRepository.save(attempt);
+        try {
+            LoginAttempt attempt = new LoginAttempt(username, ipAddress, false);
+            loginAttemptRepository.save(attempt);
+        } catch (Exception e) {
+            // Log but don't fail login if we can't record the attempt
+            System.err.println("Failed to record login attempt: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private String generateSecureToken() {

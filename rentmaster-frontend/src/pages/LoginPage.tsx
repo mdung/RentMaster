@@ -17,7 +17,8 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      await login({ username, password });
+      // Trim username and password to avoid whitespace issues
+      await login({ username: username.trim(), password: password.trim() });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please check your credentials.');

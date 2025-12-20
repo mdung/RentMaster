@@ -33,6 +33,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        // Skip JWT processing for auth endpoints
+        String path = request.getRequestURI();
+        if (path != null && path.startsWith("/api/auth/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         final String authorizationHeader = request.getHeader("Authorization");
         final String organizationHeader = request.getHeader("X-Organization-Id");
 
