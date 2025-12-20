@@ -79,15 +79,15 @@ public class SearchConfig {
     @CollectionTable(name = "search_config_index_settings", 
                      joinColumns = @JoinColumn(name = "config_id"))
     @MapKeyColumn(name = "setting_key")
-    @Column(name = "setting_value")
-    private Map<String, Object> indexSettings;
+    @Column(name = "setting_value", columnDefinition = "TEXT")
+    private Map<String, String> indexSettings;
     
     @ElementCollection
     @CollectionTable(name = "search_config_analyzer_settings", 
                      joinColumns = @JoinColumn(name = "config_id"))
     @MapKeyColumn(name = "analyzer_key")
-    @Column(name = "analyzer_value")
-    private Map<String, Object> analyzerSettings;
+    @Column(name = "analyzer_value", columnDefinition = "TEXT")
+    private Map<String, String> analyzerSettings;
     
     @ElementCollection
     @CollectionTable(name = "search_config_boost_fields", 
@@ -302,19 +302,19 @@ public class SearchConfig {
         this.personalizationEnabled = personalizationEnabled;
     }
 
-    public Map<String, Object> getIndexSettings() {
+    public Map<String, String> getIndexSettings() {
         return indexSettings;
     }
 
-    public void setIndexSettings(Map<String, Object> indexSettings) {
+    public void setIndexSettings(Map<String, String> indexSettings) {
         this.indexSettings = indexSettings;
     }
 
-    public Map<String, Object> getAnalyzerSettings() {
+    public Map<String, String> getAnalyzerSettings() {
         return analyzerSettings;
     }
 
-    public void setAnalyzerSettings(Map<String, Object> analyzerSettings) {
+    public void setAnalyzerSettings(Map<String, String> analyzerSettings) {
         this.analyzerSettings = analyzerSettings;
     }
 

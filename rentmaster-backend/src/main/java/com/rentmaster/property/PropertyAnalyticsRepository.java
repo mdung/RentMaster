@@ -16,7 +16,8 @@ public interface PropertyAnalyticsRepository extends JpaRepository<PropertyAnaly
 
     List<PropertyAnalytics> findByPropertyId(Long propertyId);
 
-    List<PropertyAnalytics> findByPropertyIdOrderByMetricDateDesc(Long propertyId);
+    @Query("SELECT pa FROM PropertyAnalytics pa WHERE pa.propertyId = :propertyId ORDER BY pa.metricDate DESC")
+    List<PropertyAnalytics> findByPropertyIdOrderByMetricDateDesc(@Param("propertyId") Long propertyId);
 
     List<PropertyAnalytics> findByPropertyIdAndMetricType(Long propertyId, PropertyAnalytics.MetricType metricType);
 
@@ -24,11 +25,11 @@ public interface PropertyAnalyticsRepository extends JpaRepository<PropertyAnaly
 
     Page<PropertyAnalytics> findByPropertyId(Long propertyId, Pageable pageable);
 
-    @Query("SELECT pa FROM PropertyAnalytics pa WHERE pa.propertyId = :propertyId AND pa.metricDate BETWEEN :startDate AND :endDate ORDER BY pa.metricDate ASC")
+    @Query("SELECT pa FROM PropertyAnalytics pa WHERE pa.propertyId = :propertyId AND pa.metricDate >= :startDate AND pa.metricDate <= :endDate ORDER BY pa.metricDate ASC")
     List<PropertyAnalytics> findByPropertyIdAndDateRange(@Param("propertyId") Long propertyId,
             @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT pa FROM PropertyAnalytics pa WHERE pa.propertyId = :propertyId AND pa.metricType = :metricType AND pa.metricDate BETWEEN :startDate AND :endDate ORDER BY pa.metricDate ASC")
+    @Query("SELECT pa FROM PropertyAnalytics pa WHERE pa.propertyId = :propertyId AND pa.metricType = :metricType AND pa.metricDate >= :startDate AND pa.metricDate <= :endDate ORDER BY pa.metricDate ASC")
     List<PropertyAnalytics> findByPropertyIdAndMetricTypeAndDateRange(@Param("propertyId") Long propertyId,
             @Param("metricType") PropertyAnalytics.MetricType metricType, @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
@@ -44,8 +45,9 @@ public interface PropertyAnalyticsRepository extends JpaRepository<PropertyAnaly
     List<PropertyAnalytics> findByPropertyIdAndYearAndQuarter(@Param("propertyId") Long propertyId,
             @Param("year") Integer year, @Param("quarter") Integer quarter);
 
-    Optional<PropertyAnalytics> findTopByPropertyIdAndMetricTypeOrderByMetricDateDesc(Long propertyId,
-            PropertyAnalytics.MetricType metricType);
+    @Query(value = "SELECT * FROM property_analytics WHERE property_id = :propertyId AND metric_type = :metricType ORDER BY metric_date DESC LIMIT 1", nativeQuery = true)
+    Optional<PropertyAnalytics> findTopByPropertyIdAndMetricTypeOrderByMetricDateDesc(@Param("propertyId") Long propertyId,
+            @Param("metricType") PropertyAnalytics.MetricType metricType);
 
     @Query("SELECT AVG(pa.value) FROM PropertyAnalytics pa WHERE pa.propertyId = :propertyId AND pa.metricType = :metricType")
     Double getAverageValueByMetricType(@Param("propertyId") Long propertyId,

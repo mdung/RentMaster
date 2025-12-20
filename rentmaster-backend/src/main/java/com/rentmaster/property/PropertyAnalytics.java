@@ -18,7 +18,7 @@ public class PropertyAnalytics {
     @Enumerated(EnumType.STRING)
     private MetricType metricType;
 
-    @Column(name = "metric_date")
+    @Column(name = "metric_date", columnDefinition = "DATE")
     private LocalDate metricDate;
 
     @Column(name = "value")

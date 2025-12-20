@@ -22,10 +22,11 @@ public interface SearchAnalyticsRepository extends JpaRepository<SearchAnalytics
     List<SearchAnalytics> findBySearchTypeOrderByTimestampDesc(String searchType);
     
     // Get popular searches
-    @Query("SELECT s.query, COUNT(s) as count FROM SearchAnalytics s " +
+    @Query(value = "SELECT s.query, COUNT(s) as count FROM search_analytics s " +
            "WHERE s.timestamp >= :since " +
            "GROUP BY s.query " +
-           "ORDER BY count DESC")
+           "ORDER BY count DESC " +
+           "LIMIT :limit", nativeQuery = true)
     List<Object[]> getPopularSearches(@Param("since") LocalDateTime since, @Param("limit") int limit);
     
     // Get search volume trends
@@ -36,11 +37,12 @@ public interface SearchAnalyticsRepository extends JpaRepository<SearchAnalytics
     List<Object[]> getSearchVolumeTrends(@Param("since") LocalDateTime since);
     
     // Get trending queries
-    @Query("SELECT s.query, COUNT(s) as count FROM SearchAnalytics s " +
+    @Query(value = "SELECT s.query, COUNT(s) as count FROM search_analytics s " +
            "WHERE s.timestamp >= :since " +
            "GROUP BY s.query " +
            "HAVING COUNT(s) > 1 " +
-           "ORDER BY count DESC")
+           "ORDER BY count DESC " +
+           "LIMIT :limit", nativeQuery = true)
     List<Object[]> getTrendingQueries(@Param("since") LocalDateTime since, @Param("limit") int limit);
     
     // Get search categories
@@ -84,10 +86,11 @@ public interface SearchAnalyticsRepository extends JpaRepository<SearchAnalytics
     List<Object[]> getSearchFrequencyByHour(@Param("since") LocalDateTime since);
     
     // Get failed searches (no results)
-    @Query("SELECT s.query, COUNT(s) as count FROM SearchAnalytics s " +
-           "WHERE s.timestamp >= :since AND (s.resultsCount = 0 OR s.resultsCount IS NULL) " +
+    @Query(value = "SELECT s.query, COUNT(s) as count FROM search_analytics s " +
+           "WHERE s.timestamp >= :since AND (s.results_count = 0 OR s.results_count IS NULL) " +
            "GROUP BY s.query " +
-           "ORDER BY count DESC")
+           "ORDER BY count DESC " +
+           "LIMIT :limit", nativeQuery = true)
     List<Object[]> getFailedSearches(@Param("since") LocalDateTime since, @Param("limit") int limit);
     
     // Get search conversion rate by query
@@ -101,21 +104,23 @@ public interface SearchAnalyticsRepository extends JpaRepository<SearchAnalytics
     List<Object[]> getSearchConversionRates(@Param("since") LocalDateTime since);
     
     // Get top exit queries (searches after which users left)
-    @Query("SELECT s.query, COUNT(s) as count FROM SearchAnalytics s " +
+    @Query(value = "SELECT s.query, COUNT(s) as count FROM search_analytics s " +
            "WHERE s.timestamp >= :since AND s.action = 'EXIT' " +
            "GROUP BY s.query " +
-           "ORDER BY count DESC")
+           "ORDER BY count DESC " +
+           "LIMIT :limit", nativeQuery = true)
     List<Object[]> getTopExitQueries(@Param("since") LocalDateTime since, @Param("limit") int limit);
     
     // Get search refinement patterns
-    @Query("SELECT s1.query as originalQuery, s2.query as refinedQuery, COUNT(*) as count " +
-           "FROM SearchAnalytics s1 " +
-           "JOIN SearchAnalytics s2 ON s1.sessionId = s2.sessionId " +
+    @Query(value = "SELECT s1.query as original_query, s2.query as refined_query, COUNT(*) as count " +
+           "FROM search_analytics s1 " +
+           "JOIN search_analytics s2 ON s1.session_id = s2.session_id " +
            "WHERE s1.timestamp < s2.timestamp " +
-           "AND s2.timestamp <= s1.timestamp + INTERVAL 5 MINUTE " +
+           "AND s2.timestamp <= s1.timestamp + INTERVAL '5 minutes' " +
            "AND s1.query != s2.query " +
            "AND s1.timestamp >= :since " +
            "GROUP BY s1.query, s2.query " +
-           "ORDER BY count DESC")
+           "ORDER BY count DESC " +
+           "LIMIT :limit", nativeQuery = true)
     List<Object[]> getSearchRefinementPatterns(@Param("since") LocalDateTime since, @Param("limit") int limit);
 }

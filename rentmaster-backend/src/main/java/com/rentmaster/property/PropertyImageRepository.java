@@ -13,7 +13,7 @@ public interface PropertyImageRepository extends JpaRepository<PropertyImage, Lo
     
     List<PropertyImage> findByPropertyIdOrderByIsPrimaryDescUploadedAtDesc(Long propertyId);
     
-    List<PropertyImage> findByPropertyIdAndCategory(Long propertyId, String category);
+    List<PropertyImage> findByPropertyIdAndImageType(Long propertyId, PropertyImage.ImageType imageType);
     
     PropertyImage findByPropertyIdAndIsPrimaryTrue(Long propertyId);
     

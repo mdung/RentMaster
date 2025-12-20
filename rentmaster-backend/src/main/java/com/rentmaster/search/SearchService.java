@@ -535,7 +535,12 @@ public class SearchService {
             config.setSearchAnalyticsEnabled((Boolean) configData.get("searchAnalyticsEnabled"));
             config.setMaxResults((Integer) configData.get("maxResults"));
             config.setSearchTimeout((Integer) configData.get("searchTimeout"));
-            config.setIndexSettings((Map<String, Object>) configData.get("indexSettings"));
+            if (configData.get("indexSettings") != null) {
+                Map<?, ?> rawMap = (Map<?, ?>) configData.get("indexSettings");
+                Map<String, String> stringMap = new java.util.HashMap<>();
+                rawMap.forEach((k, v) -> stringMap.put(k.toString(), v != null ? v.toString() : null));
+                config.setIndexSettings(stringMap);
+            }
             config.setUpdatedAt(LocalDateTime.now());
 
             searchConfigRepository.save(config);
@@ -1090,8 +1095,8 @@ public class SearchService {
         config.setMaxResults(100);
         config.setSearchTimeout(30);
         config.setIndexSettings(Map.of(
-                "number_of_shards", 1,
-                "number_of_replicas", 0));
+                "number_of_shards", "1",
+                "number_of_replicas", "0"));
         return config;
     }
 

@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public interface BulkDocumentGenerationRepository extends JpaRepository<BulkDocu
     
     List<BulkDocumentGeneration> findByRecipientType(BulkDocumentGeneration.RecipientType recipientType);
     
-    @Query("SELECT COUNT(bdg) FROM BulkDocumentGeneration bdg WHERE DATE(bdg.createdAt) = CURRENT_DATE")
+    @Query(value = "SELECT COUNT(*) FROM bulk_document_generations WHERE DATE(created_at) = CURRENT_DATE", nativeQuery = true)
     long countTodaysGenerations();
     
     @Query("SELECT COUNT(bdg) FROM BulkDocumentGeneration bdg WHERE bdg.status = 'COMPLETED'")
