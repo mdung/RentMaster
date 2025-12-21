@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient';
+import apiClient from './apiClient';
 import { TenantCommunity, CommunityPost, CommunityEvent } from '../../types';
 
 export interface CommunityComment {

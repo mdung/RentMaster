@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { MainLayout } from '../components/MainLayout';
 import { Property, Room } from '../types';
+import { propertyApi, roomApi } from '../services/api/propertyApi';
+import { propertyManagementApi, PropertyAmenity as ApiPropertyAmenity, PropertyImage as ApiPropertyImage, FloorPlan as ApiFloorPlan, MaintenanceSchedule as ApiMaintenanceSchedule, Vendor as ApiVendor } from '../services/api/propertyManagementApi';
+import { ImageUploadModal, AmenityModal, FloorPlanModal, ScheduleModal, VendorModal } from './PropertyManagementPageModals';
 import './PropertyManagementPage.css';
 
 interface PropertyAmenity {
@@ -81,6 +84,15 @@ export const PropertyManagementPage: React.FC = () => {
   const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([]);
   const [maintenanceSchedules, setMaintenanceSchedules] = useState<MaintenanceSchedule[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  
+  // Modal states
+  const [showAmenityModal, setShowAmenityModal] = useState(false);
+  const [showImageUploadModal, setShowImageUploadModal] = useState(false);
+  const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
     loadPropertyData();
@@ -106,282 +118,161 @@ export const PropertyManagementPage: React.FC = () => {
   };
 
   const loadProperties = async () => {
-    // Mock data - replace with actual API call
-    const mockProperties: Property[] = [
-      {
-        id: 1,
-        name: 'Sunset Apartments',
-        address: '456 Oak Street, Downtown, City 12345',
-        description: 'Modern apartment complex with premium amenities',
-        createdAt: '2024-01-01T00:00:00'
-      },
-      {
-        id: 2,
-        name: 'Downtown Lofts',
-        address: '789 Main Street, Downtown, City 12345',
-        description: 'Luxury loft-style apartments in the heart of downtown',
-        createdAt: '2024-02-01T00:00:00'
+    try {
+      const props = await propertyApi.getAll();
+      setProperties(props);
+      if (props.length > 0 && !props.find(p => p.id === selectedProperty)) {
+        setSelectedProperty(props[0].id);
       }
-    ];
-    setProperties(mockProperties);
+    } catch (error) {
+      console.error('Failed to load properties:', error);
+      setProperties([]);
+    }
   };
 
   const loadRooms = async () => {
-    // Mock data - replace with actual API call
-    const mockRooms: Room[] = [
-      {
-        id: 1,
-        propertyId: selectedProperty,
-        propertyName: 'Sunset Apartments',
-        code: 'A101',
-        floor: '1st Floor',
-        type: 'Studio',
-        sizeM2: 45,
-        status: 'OCCUPIED',
-        baseRent: 1200,
-        capacity: 2,
-        notes: 'Recently renovated'
-      },
-      {
-        id: 2,
-        propertyId: selectedProperty,
-        propertyName: 'Sunset Apartments',
-        code: 'A102',
-        floor: '1st Floor',
-        type: '1 Bedroom',
-        sizeM2: 65,
-        status: 'AVAILABLE',
-        baseRent: 1500,
-        capacity: 3
-      },
-      {
-        id: 3,
-        propertyId: selectedProperty,
-        propertyName: 'Sunset Apartments',
-        code: 'B201',
-        floor: '2nd Floor',
-        type: '2 Bedroom',
-        sizeM2: 85,
-        status: 'MAINTENANCE',
-        baseRent: 1800,
-        capacity: 4,
-        notes: 'HVAC repair in progress'
-      }
-    ];
-    setRooms(mockRooms);
+    try {
+      const roomsData = await propertyManagementApi.getRoomsByProperty(selectedProperty);
+      setRooms(roomsData);
+    } catch (error) {
+      console.error('Failed to load rooms:', error);
+      setRooms([]);
+    }
   };
 
   const loadAmenities = async () => {
-    // Mock data - replace with actual API call
-    const mockAmenities: PropertyAmenity[] = [
-      {
-        id: 1,
-        name: 'Swimming Pool',
-        description: 'Olympic-size heated swimming pool',
-        category: 'RECREATION',
-        icon: 'fas fa-swimming-pool',
-        isAvailable: true,
-        additionalCost: 0,
+    try {
+      const amenitiesData = await propertyManagementApi.getAmenities(selectedProperty);
+      // Map API response to component interface
+      const mappedAmenities: PropertyAmenity[] = amenitiesData.map(a => ({
+        id: a.id,
+        name: a.name,
+        description: a.description || '',
+        category: a.category,
+        icon: `fas fa-${a.category.toLowerCase()}`,
+        isAvailable: a.available,
+        additionalCost: a.cost || 0,
         costFrequency: 'MONTHLY',
-        location: 'Rooftop',
-        operatingHours: '6:00 AM - 10:00 PM',
-        capacity: 50,
+        location: '',
+        operatingHours: '',
+        capacity: undefined,
         bookingRequired: false
-      },
-      {
-        id: 2,
-        name: 'Fitness Center',
-        description: 'Fully equipped gym with modern equipment',
-        category: 'FITNESS',
-        icon: 'fas fa-dumbbell',
-        isAvailable: true,
-        additionalCost: 25,
-        costFrequency: 'MONTHLY',
-        location: 'Ground Floor',
-        operatingHours: '24/7',
-        capacity: 20,
-        bookingRequired: false
-      },
-      {
-        id: 3,
-        name: 'Parking Garage',
-        description: 'Secure underground parking',
-        category: 'PARKING',
-        icon: 'fas fa-car',
-        isAvailable: true,
-        additionalCost: 100,
-        costFrequency: 'MONTHLY',
-        location: 'Underground',
-        operatingHours: '24/7',
-        bookingRequired: true
-      }
-    ];
-    setAmenities(mockAmenities);
+      }));
+      setAmenities(mappedAmenities);
+    } catch (error) {
+      console.error('Failed to load amenities:', error);
+      setAmenities([]);
+    }
   };
 
   const loadImages = async () => {
-    // Mock data - replace with actual API call
-    const mockImages: PropertyImage[] = [
-      {
-        id: 1,
-        propertyId: selectedProperty,
-        imageUrl: '/images/property-exterior.jpg',
-        imageType: 'EXTERIOR',
-        caption: 'Building exterior view',
-        displayOrder: 1,
-        isMain: true
-      },
-      {
-        id: 2,
-        propertyId: selectedProperty,
-        imageUrl: '/images/property-lobby.jpg',
-        imageType: 'INTERIOR',
-        caption: 'Modern lobby area',
-        displayOrder: 2,
-        isMain: false
-      },
-      {
-        id: 3,
-        propertyId: selectedProperty,
-        imageUrl: '/images/property-pool.jpg',
-        imageType: 'AMENITY',
-        caption: 'Rooftop swimming pool',
-        displayOrder: 3,
-        isMain: false
-      }
-    ];
-    setImages(mockImages);
+    try {
+      const imagesData = await propertyManagementApi.getImages(selectedProperty);
+      // Map API response to component interface
+      const mappedImages: PropertyImage[] = imagesData.map(img => {
+        let imageUrl = img.filePath;
+        // If it's not already a full URL, construct it
+        if (!imageUrl.startsWith('http')) {
+          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+          imageUrl = imageUrl.startsWith('/') 
+            ? `${apiBaseUrl}${imageUrl}`
+            : `${apiBaseUrl}/api/files/${imageUrl}`;
+        }
+        return {
+          id: img.id,
+          propertyId: selectedProperty,
+          imageUrl: imageUrl,
+          imageType: img.category || 'OTHER',
+          caption: img.description || img.fileName,
+          displayOrder: 0,
+          isMain: img.isPrimary || false
+        };
+      });
+      setImages(mappedImages);
+    } catch (error) {
+      console.error('Failed to load images:', error);
+      setImages([]);
+    }
   };
 
   const loadFloorPlans = async () => {
-    // Mock data - replace with actual API call
-    const mockFloorPlans: FloorPlan[] = [
-      {
-        id: 1,
-        propertyId: selectedProperty,
-        name: 'Ground Floor',
-        description: 'Lobby, amenities, and commercial spaces',
-        floorNumber: 0,
-        totalRooms: 0,
-        totalArea: 500,
-        imageUrl: '/images/floor-plan-ground.jpg',
-        isActive: true
-      },
-      {
-        id: 2,
-        propertyId: selectedProperty,
-        name: 'Floor 1-5',
-        description: 'Residential units - Studios and 1BR',
-        floorNumber: 1,
-        totalRooms: 20,
-        totalArea: 1200,
-        imageUrl: '/images/floor-plan-residential.jpg',
-        isActive: true
-      },
-      {
-        id: 3,
-        propertyId: selectedProperty,
-        name: 'Floor 6-10',
-        description: 'Residential units - 2BR and 3BR',
-        floorNumber: 6,
-        totalRooms: 15,
-        totalArea: 1500,
-        imageUrl: '/images/floor-plan-premium.jpg',
-        isActive: true
-      }
-    ];
-    setFloorPlans(mockFloorPlans);
+    try {
+      const floorPlansData = await propertyManagementApi.getFloorPlans(selectedProperty);
+      // Map API response to component interface
+      const mappedFloorPlans: FloorPlan[] = floorPlansData.map(fp => {
+        let imageUrl = fp.filePath;
+        // If it's not already a full URL, construct it
+        if (!imageUrl.startsWith('http')) {
+          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+          imageUrl = imageUrl.startsWith('/') 
+            ? `${apiBaseUrl}${imageUrl}`
+            : `${apiBaseUrl}/api/files/${imageUrl}`;
+        }
+        return {
+          id: fp.id,
+          propertyId: selectedProperty,
+          name: fp.name,
+          description: fp.description || '',
+          floorNumber: parseInt(fp.floor) || 0,
+          totalRooms: fp.roomCount || 0,
+          totalArea: fp.totalArea || 0,
+          imageUrl: imageUrl,
+          isActive: true
+        };
+      });
+      setFloorPlans(mappedFloorPlans);
+    } catch (error) {
+      console.error('Failed to load floor plans:', error);
+      setFloorPlans([]);
+    }
   };
 
   const loadMaintenanceSchedules = async () => {
-    // Mock data - replace with actual API call
-    const mockSchedules: MaintenanceSchedule[] = [
-      {
-        id: 1,
+    try {
+      const schedulesData = await propertyManagementApi.getMaintenanceSchedules(selectedProperty);
+      // Map API response to component interface
+      const mappedSchedules: MaintenanceSchedule[] = schedulesData.map(s => ({
+        id: s.id,
         propertyId: selectedProperty,
-        title: 'HVAC System Inspection',
-        description: 'Quarterly inspection and maintenance of HVAC systems',
-        maintenanceType: 'HVAC',
-        frequency: 'QUARTERLY',
-        nextDueDate: '2024-12-15',
-        lastCompletedDate: '2024-09-15',
-        assignedVendor: 'ABC HVAC Services',
-        estimatedCost: 2500,
-        priority: 'HIGH',
-        isActive: true
-      },
-      {
-        id: 2,
-        propertyId: selectedProperty,
-        title: 'Elevator Maintenance',
-        description: 'Monthly elevator inspection and servicing',
-        maintenanceType: 'ELEVATOR',
-        frequency: 'MONTHLY',
-        nextDueDate: '2024-12-01',
-        lastCompletedDate: '2024-11-01',
-        assignedVendor: 'Elevator Tech Co',
-        estimatedCost: 800,
-        priority: 'MEDIUM',
-        isActive: true
-      },
-      {
-        id: 3,
-        propertyId: selectedProperty,
-        title: 'Fire Safety System Check',
-        description: 'Annual fire safety system inspection',
-        maintenanceType: 'SAFETY',
-        frequency: 'YEARLY',
-        nextDueDate: '2025-03-01',
-        lastCompletedDate: '2024-03-01',
-        assignedVendor: 'Fire Safety Pro',
-        estimatedCost: 1200,
-        priority: 'HIGH',
-        isActive: true
-      }
-    ];
-    setMaintenanceSchedules(mockSchedules);
+        title: s.title,
+        description: s.description,
+        maintenanceType: s.category,
+        frequency: s.frequency,
+        nextDueDate: s.nextDueDate,
+        lastCompletedDate: s.lastCompletedDate,
+        assignedVendor: s.assignedVendor,
+        estimatedCost: s.estimatedCost || 0,
+        priority: s.priority,
+        isActive: s.status === 'ACTIVE'
+      }));
+      setMaintenanceSchedules(mappedSchedules);
+    } catch (error) {
+      console.error('Failed to load maintenance schedules:', error);
+      setMaintenanceSchedules([]);
+    }
   };
 
   const loadVendors = async () => {
-    // Mock data - replace with actual API call
-    const mockVendors: Vendor[] = [
-      {
-        id: 1,
-        name: 'ABC HVAC Services',
-        contactPerson: 'John Smith',
-        phone: '+1-555-0123',
-        email: 'john@abchvac.com',
-        address: '123 Industrial Ave, City 12345',
-        serviceTypes: ['HVAC', 'PLUMBING', 'ELECTRICAL'],
-        rating: 4.8,
-        isActive: true,
-        notes: 'Reliable service, quick response time'
-      },
-      {
-        id: 2,
-        name: 'Elevator Tech Co',
-        contactPerson: 'Sarah Johnson',
-        phone: '+1-555-0124',
-        email: 'sarah@elevatortech.com',
-        address: '456 Tech Street, City 12345',
-        serviceTypes: ['ELEVATOR', 'MECHANICAL'],
-        rating: 4.6,
-        isActive: true
-      },
-      {
-        id: 3,
-        name: 'Fire Safety Pro',
-        contactPerson: 'Mike Wilson',
-        phone: '+1-555-0125',
-        email: 'mike@firesafetypro.com',
-        address: '789 Safety Blvd, City 12345',
-        serviceTypes: ['FIRE_SAFETY', 'SECURITY'],
-        rating: 4.9,
-        isActive: true,
-        notes: 'Certified fire safety specialists'
-      }
-    ];
-    setVendors(mockVendors);
+    try {
+      const vendorsData = await propertyManagementApi.getVendors();
+      // Map API response to component interface
+      const mappedVendors: Vendor[] = vendorsData.map(v => ({
+        id: v.id,
+        name: v.name,
+        contactPerson: v.contactPerson,
+        phone: v.phone,
+        email: v.email,
+        address: v.address || '',
+        serviceTypes: [v.category],
+        rating: v.rating,
+        isActive: v.active,
+        notes: ''
+      }));
+      setVendors(mappedVendors);
+    } catch (error) {
+      console.error('Failed to load vendors:', error);
+      setVendors([]);
+    }
   };
 
   return (
@@ -468,24 +359,136 @@ export const PropertyManagementPage: React.FC = () => {
                 />
               )}
               {activeTab === 'amenities' && (
-                <AmenitiesTab amenities={amenities} onRefresh={loadAmenities} />
+                <AmenitiesTab 
+                  amenities={amenities} 
+                  onRefresh={loadAmenities}
+                  onAdd={() => { setEditingItem(null); setFormData({}); setShowAmenityModal(true); }}
+                  propertyId={selectedProperty}
+                />
               )}
               {activeTab === 'images' && (
-                <ImagesTab images={images} onRefresh={loadImages} />
+                <ImagesTab 
+                  images={images} 
+                  onRefresh={loadImages}
+                  onUpload={() => { setShowImageUploadModal(true); }}
+                  propertyId={selectedProperty}
+                />
               )}
               {activeTab === 'floor-plans' && (
-                <FloorPlansTab floorPlans={floorPlans} onRefresh={loadFloorPlans} />
+                <FloorPlansTab 
+                  floorPlans={floorPlans} 
+                  onRefresh={loadFloorPlans}
+                  onAdd={() => { setEditingItem(null); setFormData({}); setShowFloorPlanModal(true); }}
+                  propertyId={selectedProperty}
+                />
               )}
               {activeTab === 'maintenance' && (
-                <MaintenanceTab schedules={maintenanceSchedules} onRefresh={loadMaintenanceSchedules} />
+                <MaintenanceTab 
+                  schedules={maintenanceSchedules} 
+                  onRefresh={loadMaintenanceSchedules}
+                  onAdd={() => { setEditingItem(null); setFormData({}); setShowScheduleModal(true); }}
+                  propertyId={selectedProperty}
+                />
               )}
               {activeTab === 'vendors' && (
-                <VendorsTab vendors={vendors} onRefresh={loadVendors} />
+                <VendorsTab 
+                  vendors={vendors} 
+                  onRefresh={loadVendors}
+                  onAdd={() => { setEditingItem(null); setFormData({}); setShowVendorModal(true); }}
+                />
               )}
             </>
           )}
         </div>
       </div>
+
+      {/* Image Upload Modal */}
+      {showImageUploadModal && (
+        <ImageUploadModal
+          propertyId={selectedProperty}
+          onClose={() => setShowImageUploadModal(false)}
+          onSuccess={() => {
+            setShowImageUploadModal(false);
+            loadImages();
+          }}
+        />
+      )}
+
+      {/* Add Amenity Modal */}
+      {showAmenityModal && (
+        <AmenityModal
+          propertyId={selectedProperty}
+          amenity={editingItem}
+          onClose={() => {
+            setShowAmenityModal(false);
+            setEditingItem(null);
+            setFormData({});
+          }}
+          onSuccess={() => {
+            setShowAmenityModal(false);
+            setEditingItem(null);
+            setFormData({});
+            loadAmenities();
+          }}
+        />
+      )}
+
+      {/* Add Floor Plan Modal */}
+      {showFloorPlanModal && (
+        <FloorPlanModal
+          propertyId={selectedProperty}
+          floorPlan={editingItem}
+          onClose={() => {
+            setShowFloorPlanModal(false);
+            setEditingItem(null);
+            setFormData({});
+          }}
+          onSuccess={() => {
+            setShowFloorPlanModal(false);
+            setEditingItem(null);
+            setFormData({});
+            loadFloorPlans();
+          }}
+        />
+      )}
+
+      {/* Add Schedule Modal */}
+      {showScheduleModal && (
+        <ScheduleModal
+          propertyId={selectedProperty}
+          schedule={editingItem}
+          vendors={vendors}
+          onClose={() => {
+            setShowScheduleModal(false);
+            setEditingItem(null);
+            setFormData({});
+          }}
+          onSuccess={() => {
+            setShowScheduleModal(false);
+            setEditingItem(null);
+            setFormData({});
+            loadMaintenanceSchedules();
+          }}
+        />
+      )}
+
+      {/* Add Vendor Modal */}
+      {showVendorModal && (
+        <VendorModal
+          vendor={editingItem}
+          onClose={() => {
+            setShowVendorModal(false);
+            setEditingItem(null);
+            setFormData({});
+          }}
+          onSuccess={() => {
+            setShowVendorModal(false);
+            setEditingItem(null);
+            setFormData({});
+            loadVendors();
+          }}
+        />
+      )}
     </MainLayout>
   );
 };
@@ -584,12 +587,12 @@ const PropertyOverviewTab: React.FC<{ property?: Property; rooms: Room[] }> = ({
 };
 
 // Amenities Tab Component
-const AmenitiesTab: React.FC<{ amenities: PropertyAmenity[]; onRefresh: () => void }> = ({ amenities, onRefresh }) => {
+const AmenitiesTab: React.FC<{ amenities: PropertyAmenity[]; onRefresh: () => void; onAdd: () => void; propertyId: number }> = ({ amenities, onRefresh, onAdd, propertyId }) => {
   return (
     <div className="amenities-tab">
       <div className="amenities-header">
         <h3>Property Amenities</h3>
-        <button className="add-amenity-button">
+        <button className="add-amenity-button" onClick={onAdd}>
           <i className="fas fa-plus"></i>
           Add Amenity
         </button>
@@ -634,12 +637,12 @@ const AmenitiesTab: React.FC<{ amenities: PropertyAmenity[]; onRefresh: () => vo
 };
 
 // Images Tab Component
-const ImagesTab: React.FC<{ images: PropertyImage[]; onRefresh: () => void }> = ({ images, onRefresh }) => {
+const ImagesTab: React.FC<{ images: PropertyImage[]; onRefresh: () => void; onUpload: () => void; propertyId: number }> = ({ images, onRefresh, onUpload, propertyId }) => {
   return (
     <div className="images-tab">
       <div className="images-header">
         <h3>Property Images</h3>
-        <button className="upload-image-button">
+        <button className="upload-image-button" onClick={onUpload}>
           <i className="fas fa-upload"></i>
           Upload Images
         </button>
@@ -672,12 +675,12 @@ const ImagesTab: React.FC<{ images: PropertyImage[]; onRefresh: () => void }> = 
 };
 
 // Floor Plans Tab Component
-const FloorPlansTab: React.FC<{ floorPlans: FloorPlan[]; onRefresh: () => void }> = ({ floorPlans, onRefresh }) => {
+const FloorPlansTab: React.FC<{ floorPlans: FloorPlan[]; onRefresh: () => void; onAdd: () => void; propertyId: number }> = ({ floorPlans, onRefresh, onAdd, propertyId }) => {
   return (
     <div className="floor-plans-tab">
       <div className="floor-plans-header">
         <h3>Floor Plans</h3>
-        <button className="add-floor-plan-button">
+        <button className="add-floor-plan-button" onClick={onAdd}>
           <i className="fas fa-plus"></i>
           Add Floor Plan
         </button>
@@ -714,12 +717,12 @@ const FloorPlansTab: React.FC<{ floorPlans: FloorPlan[]; onRefresh: () => void }
 };
 
 // Maintenance Tab Component
-const MaintenanceTab: React.FC<{ schedules: MaintenanceSchedule[]; onRefresh: () => void }> = ({ schedules, onRefresh }) => {
+const MaintenanceTab: React.FC<{ schedules: MaintenanceSchedule[]; onRefresh: () => void; onAdd: () => void; propertyId: number }> = ({ schedules, onRefresh, onAdd, propertyId }) => {
   return (
     <div className="maintenance-tab">
       <div className="maintenance-header">
         <h3>Maintenance Schedules</h3>
-        <button className="add-schedule-button">
+        <button className="add-schedule-button" onClick={onAdd}>
           <i className="fas fa-plus"></i>
           Add Schedule
         </button>
@@ -760,12 +763,12 @@ const MaintenanceTab: React.FC<{ schedules: MaintenanceSchedule[]; onRefresh: ()
 };
 
 // Vendors Tab Component
-const VendorsTab: React.FC<{ vendors: Vendor[]; onRefresh: () => void }> = ({ vendors, onRefresh }) => {
+const VendorsTab: React.FC<{ vendors: Vendor[]; onRefresh: () => void; onAdd: () => void }> = ({ vendors, onRefresh, onAdd }) => {
   return (
     <div className="vendors-tab">
       <div className="vendors-header">
         <h3>Vendors & Service Providers</h3>
-        <button className="add-vendor-button">
+        <button className="add-vendor-button" onClick={onAdd}>
           <i className="fas fa-plus"></i>
           Add Vendor
         </button>

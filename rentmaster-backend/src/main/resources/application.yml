@@ -23,4 +23,20 @@ spring:
 server:
   port: 8080
 
+# File Upload Configuration
+file:
+  upload:
+    # Storage type: 'local' or 's3'
+    storage-type: ${FILE_STORAGE_TYPE:local}
+    # Local storage directory (used when storage-type is 'local')
+    local-directory: ${FILE_UPLOAD_DIR:./uploads/properties/}
+    # AWS S3 Configuration (used when storage-type is 's3')
+    s3:
+      bucket-name: ${AWS_S3_BUCKET_NAME:}
+      region: ${AWS_S3_REGION:us-east-1}
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+      # Optional: S3 endpoint for S3-compatible services (e.g., DigitalOcean Spaces)
+      endpoint: ${AWS_S3_ENDPOINT:}
+
 

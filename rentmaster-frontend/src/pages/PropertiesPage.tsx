@@ -218,11 +218,11 @@ export const PropertiesPage: React.FC = () => {
         </div>
 
         <div className="properties-grid">
-          {properties
-            .filter((prop) => {
+          {(() => {
+            const filteredProperties = properties.filter((prop) => {
               // Apply search filter
               if (searchQuery.trim()) {
-                const query = searchQuery.toLowerCase();
+                const query = searchQuery.toLowerCase().trim();
                 const matchesName = prop.name?.toLowerCase().includes(query);
                 const matchesAddress = prop.address?.toLowerCase().includes(query);
                 const propRooms = allRooms.filter(r => r.propertyId === prop.id);
@@ -248,8 +248,26 @@ export const PropertiesPage: React.FC = () => {
                 return hasVacancy;
               }
               return true; // 'all' filter
-            })
-            .map((prop) => {
+            });
+
+            if (filteredProperties.length === 0) {
+              return (
+                <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '3rem 1rem' }}>
+                  <div className="empty-state-content">
+                    <div className="empty-icon">🔍</div>
+                    <p>
+                      {searchQuery.trim() 
+                        ? `No properties found matching "${searchQuery}"`
+                        : filterType !== 'all'
+                        ? `No properties found with the selected filter`
+                        : 'No properties found'}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
+            return filteredProperties.map((prop) => {
             const propRooms = allRooms.filter(r => r.propertyId === prop.id);
             const occupiedCount = propRooms.filter(r => r.status === 'OCCUPIED').length;
             const totalCount = propRooms.length;
@@ -310,7 +328,8 @@ export const PropertiesPage: React.FC = () => {
                 </div>
               </div>
             );
-          })}
+            });
+          })()}
         </div>
 
         {selectedProperty && (

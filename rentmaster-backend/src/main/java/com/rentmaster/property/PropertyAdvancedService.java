@@ -40,7 +40,8 @@ public class PropertyAdvancedService {
     @Autowired
     private RoomRepository roomRepository;
 
-    private final String UPLOAD_DIR = "./uploads/properties/";
+    @Autowired
+    private FileStorageService fileStorageService;
 
     // Property Images Methods
     public List<PropertyImage> getImagesByProperty(Long propertyId) {
@@ -49,18 +50,15 @@ public class PropertyAdvancedService {
 
     public PropertyImage uploadImage(Long propertyId, MultipartFile file, String category, String description) {
         try {
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path uploadPath = Paths.get(UPLOAD_DIR + propertyId + "/images/");
-            Files.createDirectories(uploadPath);
-
-            Path filePath = uploadPath.resolve(fileName);
-            Files.write(filePath, file.getBytes());
+            String filePath = fileStorageService.uploadFile(file, propertyId + "/images/");
+            String fileUrl = fileStorageService.getFileUrl(filePath);
 
             PropertyImage image = new PropertyImage();
             image.setPropertyId(propertyId);
-            image.setFilename(fileName);
-            image.setOriginalFilename(file.getOriginalFilename());
-            image.setFilePath(filePath.toString());
+            String originalFilename = file.getOriginalFilename();
+            image.setFilename(originalFilename != null ? originalFilename : "image");
+            image.setOriginalFilename(originalFilename);
+            image.setFilePath(filePath);
             image.setFileSize(file.getSize());
             image.setMimeType(file.getContentType());
             if (category != null) {
@@ -105,19 +103,16 @@ public class PropertyAdvancedService {
     public FloorPlan uploadFloorPlan(Long propertyId, MultipartFile file, String name, String floor, Integer roomCount,
             Double totalArea, String description) {
         try {
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            Path uploadPath = Paths.get(UPLOAD_DIR + propertyId + "/floor-plans/");
-            Files.createDirectories(uploadPath);
-
-            Path filePath = uploadPath.resolve(fileName);
-            Files.write(filePath, file.getBytes());
+            String filePath = fileStorageService.uploadFile(file, propertyId + "/floor-plans/");
+            String fileUrl = fileStorageService.getFileUrl(filePath);
 
             FloorPlan floorPlan = new FloorPlan();
             floorPlan.setPropertyId(propertyId);
             floorPlan.setName(name);
-            floorPlan.setFilename(fileName);
-            floorPlan.setOriginalFilename(file.getOriginalFilename());
-            floorPlan.setFilePath(filePath.toString());
+            String originalFilename = file.getOriginalFilename();
+            floorPlan.setFilename(originalFilename != null ? originalFilename : "floor-plan");
+            floorPlan.setOriginalFilename(originalFilename);
+            floorPlan.setFilePath(filePath);
             floorPlan.setFileSize(file.getSize());
             floorPlan.setMimeType(file.getContentType());
             if (floor != null && !floor.isEmpty()) {
