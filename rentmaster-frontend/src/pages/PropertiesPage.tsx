@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../components/MainLayout';
 import { propertyApi, roomApi } from '../services/api/propertyApi';
 import { Property, Room } from '../types';
 import './PropertiesPage.css';
 
 export const PropertiesPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<number | null>(null);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
@@ -13,9 +16,18 @@ export const PropertiesPage: React.FC = () => {
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [formData, setFormData] = useState<any>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'fully-leased' | 'has-vacancy'>('all');
 
   useEffect(() => {
     loadData();
+    // Check if action=new is in URL params
+    if (searchParams.get('action') === 'new') {
+      setShowPropertyModal(true);
+      // Remove the query parameter from URL
+      searchParams.delete('action');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, []);
 
   useEffect(() => {
@@ -26,10 +38,14 @@ export const PropertiesPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const props = await propertyApi.getAll();
+      const [props, allRoomsData] = await Promise.all([
+        propertyApi.getAll(),
+        roomApi.getAll()
+      ]);
       setProperties(props);
+      setAllRooms(allRoomsData);
     } catch (error) {
-      console.error('Failed to load properties:', error);
+      console.error('Failed to load data:', error);
     }
   };
 
@@ -40,6 +56,27 @@ export const PropertiesPage: React.FC = () => {
     } catch (error) {
       console.error('Failed to load rooms:', error);
     }
+  };
+
+  // Calculate properties created this month
+  const getPropertiesThisMonth = () => {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return properties.filter(prop => {
+      const createdAt = new Date(prop.createdAt);
+      return createdAt >= firstDayOfMonth;
+    }).length;
+  };
+
+  // Calculate properties created last month
+  const getPropertiesLastMonth = () => {
+    const now = new Date();
+    const firstDayOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return properties.filter(prop => {
+      const createdAt = new Date(prop.createdAt);
+      return createdAt >= firstDayOfLastMonth && createdAt < firstDayOfThisMonth;
+    }).length;
   };
 
   const handlePropertySubmit = async (e: React.FormEvent) => {
@@ -53,7 +90,7 @@ export const PropertiesPage: React.FC = () => {
       setShowPropertyModal(false);
       setEditingProperty(null);
       setFormData({});
-      loadData();
+      await loadData();
     } catch (error) {
       alert('Failed to save property');
     }
@@ -116,7 +153,20 @@ export const PropertiesPage: React.FC = () => {
               <div className="overview-card-icon">🏢</div>
             </div>
             <p className="overview-card-value">{properties.length}</p>
-            <div className="overview-card-trend">↑ +2 this month</div>
+            <div className="overview-card-trend">
+              {(() => {
+                const thisMonth = getPropertiesThisMonth();
+                const lastMonth = getPropertiesLastMonth();
+                const diff = thisMonth - lastMonth;
+                if (diff > 0) {
+                  return `↑ +${diff} this month`;
+                } else if (diff < 0) {
+                  return `↓ ${diff} this month`;
+                } else {
+                  return `→ No change this month`;
+                }
+              })()}
+            </div>
           </div>
           <div className="overview-card">
             <div className="overview-card-header">
@@ -124,12 +174,12 @@ export const PropertiesPage: React.FC = () => {
               <div className="overview-card-icon">📊</div>
             </div>
             <p className="overview-card-value">
-              {rooms.length > 0 
-                ? Math.round((rooms.filter(r => r.status === 'OCCUPIED').length / rooms.length) * 100)
+              {allRooms.length > 0 
+                ? Math.round((allRooms.filter(r => r.status === 'OCCUPIED').length / allRooms.length) * 100)
                 : 0}%
             </p>
             <div className="overview-card-trend">
-              {rooms.filter(r => r.status === 'OCCUPIED').length}/{rooms.length} Rooms
+              {allRooms.filter(r => r.status === 'OCCUPIED').length}/{allRooms.length} Rooms
             </div>
           </div>
         </div>
@@ -140,19 +190,67 @@ export const PropertiesPage: React.FC = () => {
             <input
               type="text"
               placeholder="Search properties, rooms..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
         <div className="filter-buttons">
-          <button className="filter-btn active">All Properties</button>
-          <button className="filter-btn">Fully Leased</button>
-          <button className="filter-btn">Has Vacancy</button>
+          <button 
+            className={`filter-btn ${filterType === 'all' ? 'active' : ''}`}
+            onClick={() => setFilterType('all')}
+          >
+            All Properties
+          </button>
+          <button 
+            className={`filter-btn ${filterType === 'fully-leased' ? 'active' : ''}`}
+            onClick={() => setFilterType('fully-leased')}
+          >
+            Fully Leased
+          </button>
+          <button 
+            className={`filter-btn ${filterType === 'has-vacancy' ? 'active' : ''}`}
+            onClick={() => setFilterType('has-vacancy')}
+          >
+            Has Vacancy
+          </button>
         </div>
 
         <div className="properties-grid">
-          {properties.map((prop) => {
-            const propRooms = rooms.filter(r => r.propertyId === prop.id);
+          {properties
+            .filter((prop) => {
+              // Apply search filter
+              if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                const matchesName = prop.name?.toLowerCase().includes(query);
+                const matchesAddress = prop.address?.toLowerCase().includes(query);
+                const propRooms = allRooms.filter(r => r.propertyId === prop.id);
+                const matchesRoom = propRooms.some(r => 
+                  r.code?.toLowerCase().includes(query) || 
+                  r.type?.toLowerCase().includes(query)
+                );
+                if (!matchesName && !matchesAddress && !matchesRoom) {
+                  return false;
+                }
+              }
+              
+              // Apply status filter
+              const propRooms = allRooms.filter(r => r.propertyId === prop.id);
+              const occupiedCount = propRooms.filter(r => r.status === 'OCCUPIED').length;
+              const totalCount = propRooms.length;
+              const isFullyLeased = totalCount > 0 && occupiedCount === totalCount;
+              const hasVacancy = totalCount > 0 && occupiedCount < totalCount;
+              
+              if (filterType === 'fully-leased') {
+                return isFullyLeased;
+              } else if (filterType === 'has-vacancy') {
+                return hasVacancy;
+              }
+              return true; // 'all' filter
+            })
+            .map((prop) => {
+            const propRooms = allRooms.filter(r => r.propertyId === prop.id);
             const occupiedCount = propRooms.filter(r => r.status === 'OCCUPIED').length;
             const totalCount = propRooms.length;
             const hasVacancy = occupiedCount < totalCount;

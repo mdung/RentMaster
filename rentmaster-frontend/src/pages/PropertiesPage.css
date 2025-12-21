@@ -296,3 +296,111 @@
   background-color: var(--warning);
 }
 
+/* Enhanced Modal Form Styling for Better Visibility */
+.properties-page .modal-content {
+  background-color: var(--bg-card);
+}
+
+.properties-page .modal-content form {
+  background-color: var(--bg-card);
+  padding: 1.5rem;
+}
+
+.properties-page .modal-content .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.properties-page .modal-content .form-group label {
+  display: block;
+  margin-bottom: 0.625rem;
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+}
+
+.properties-page .modal-content .form-group input,
+.properties-page .modal-content .form-group textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background-color: rgba(51, 65, 85, 0.7) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.3) !important;
+  border-radius: var(--border-radius);
+  color: var(--text-primary) !important;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.properties-page .modal-content .form-group input:hover,
+.properties-page .modal-content .form-group textarea:hover {
+  border-color: rgba(59, 130, 246, 0.6) !important;
+  background-color: rgba(51, 65, 85, 0.85) !important;
+}
+
+.properties-page .modal-content .form-group input:focus,
+.properties-page .modal-content .form-group textarea:focus {
+  outline: none !important;
+  border-color: var(--primary) !important;
+  background-color: rgba(51, 65, 85, 0.95) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+.properties-page .modal-content .form-group input::placeholder,
+.properties-page .modal-content .form-group textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.8 !important;
+}
+
+.properties-page .modal-content .form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.properties-page .modal-content .modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.properties-page .modal-content .modal-actions .btn-primary,
+.properties-page .modal-content .modal-actions .btn.btn-primary {
+  background-color: var(--primary) !important;
+  color: white !important;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  transition: all 0.2s ease;
+  flex: 1;
+  border: none;
+}
+
+.properties-page .modal-content .modal-actions .btn-primary:hover,
+.properties-page .modal-content .modal-actions .btn.btn-primary:hover {
+  background-color: var(--primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.properties-page .modal-content .modal-actions .btn-secondary,
+.properties-page .modal-content .modal-actions .btn.btn-secondary {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+  border: 1.5px solid var(--border-color) !important;
+  font-weight: 600;
+  padding: 0.875rem 2rem;
+  transition: all 0.2s ease;
+  flex: 1;
+}
+
+.properties-page .modal-content .modal-actions .btn-secondary:hover,
+.properties-page .modal-content .modal-actions .btn.btn-secondary:hover {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--text-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
