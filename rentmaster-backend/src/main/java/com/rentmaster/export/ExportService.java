@@ -258,8 +258,38 @@ public class ExportService {
     }
 
     private List<Invoice> getFilteredInvoices(ExportRequest request) {
-        // TODO: Apply filters and date range
-        return invoiceRepository.findAll();
+        List<Invoice> invoices = invoiceRepository.findAll();
+        
+        // Apply status filter
+        if (request.getFilters() != null && request.getFilters().containsKey("status")) {
+            Object statusObj = request.getFilters().get("status");
+            if (statusObj != null) {
+                String status = String.valueOf(statusObj);
+                if (!status.isEmpty() && !status.equals("null") && !status.equals("ALL")) {
+                    invoices = invoices.stream()
+                        .filter(inv -> inv.getStatus() != null && inv.getStatus().name().equals(status))
+                        .toList();
+                }
+            }
+        }
+        
+        // Apply date range filter if provided
+        if (request.getDateRange() != null) {
+            if (request.getDateRange().getStartDate() != null) {
+                LocalDate startDate = request.getDateRange().getStartDate();
+                invoices = invoices.stream()
+                    .filter(inv -> inv.getIssueDate() != null && !inv.getIssueDate().isBefore(startDate))
+                    .toList();
+            }
+            if (request.getDateRange().getEndDate() != null) {
+                LocalDate endDate = request.getDateRange().getEndDate();
+                invoices = invoices.stream()
+                    .filter(inv -> inv.getIssueDate() != null && !inv.getIssueDate().isAfter(endDate))
+                    .toList();
+            }
+        }
+        
+        return invoices;
     }
 
     private List<Payment> getFilteredPayments(ExportRequest request) {
@@ -268,51 +298,86 @@ public class ExportService {
     }
 
     private void setInvoiceCellValue(Cell cell, Invoice invoice, String column) {
-        switch (column) {
-            case "id":
-                cell.setCellValue(invoice.getId());
-                break;
-            case "contractCode":
-                cell.setCellValue(invoice.getContract().getCode());
-                break;
-            case "tenantName":
-                cell.setCellValue(invoice.getContract().getPrimaryTenant().getFullName());
-                break;
-            case "totalAmount":
-                cell.setCellValue(invoice.getTotalAmount().doubleValue());
-                break;
-            case "paidAmount":
-                cell.setCellValue(invoice.getPaidAmount().doubleValue());
-                break;
-            case "remainingAmount":
-                cell.setCellValue(invoice.getRemainingAmount().doubleValue());
-                break;
-            case "status":
-                cell.setCellValue(invoice.getStatus().name());
-                break;
-            default:
-                cell.setCellValue("");
+        try {
+            switch (column) {
+                case "id":
+                    cell.setCellValue(invoice.getId() != null ? invoice.getId() : 0L);
+                    break;
+                case "contractCode":
+                    cell.setCellValue(invoice.getContract() != null && invoice.getContract().getCode() != null 
+                        ? invoice.getContract().getCode() : "");
+                    break;
+                case "tenantName":
+                    cell.setCellValue(invoice.getContract() != null && invoice.getContract().getPrimaryTenant() != null
+                        ? invoice.getContract().getPrimaryTenant().getFullName() : "");
+                    break;
+                case "roomCode":
+                    cell.setCellValue(invoice.getContract() != null && invoice.getContract().getRoom() != null
+                        && invoice.getContract().getRoom().getCode() != null
+                        ? invoice.getContract().getRoom().getCode() : "");
+                    break;
+                case "periodStart":
+                    cell.setCellValue(invoice.getPeriodStart() != null 
+                        ? invoice.getPeriodStart().format(DateTimeFormatter.ISO_LOCAL_DATE) : "");
+                    break;
+                case "periodEnd":
+                    cell.setCellValue(invoice.getPeriodEnd() != null 
+                        ? invoice.getPeriodEnd().format(DateTimeFormatter.ISO_LOCAL_DATE) : "");
+                    break;
+                case "totalAmount":
+                    cell.setCellValue(invoice.getTotalAmount() != null ? invoice.getTotalAmount().doubleValue() : 0.0);
+                    break;
+                case "paidAmount":
+                    cell.setCellValue(invoice.getPaidAmount() != null ? invoice.getPaidAmount().doubleValue() : 0.0);
+                    break;
+                case "remainingAmount":
+                    cell.setCellValue(invoice.getRemainingAmount() != null ? invoice.getRemainingAmount().doubleValue() : 0.0);
+                    break;
+                case "status":
+                    cell.setCellValue(invoice.getStatus() != null ? invoice.getStatus().name() : "");
+                    break;
+                default:
+                    cell.setCellValue("");
+            }
+        } catch (Exception e) {
+            cell.setCellValue("");
         }
     }
 
     private String getInvoiceStringValue(Invoice invoice, String column) {
-        switch (column) {
-            case "id":
-                return String.valueOf(invoice.getId());
-            case "contractCode":
-                return invoice.getContract().getCode();
-            case "tenantName":
-                return invoice.getContract().getPrimaryTenant().getFullName();
-            case "totalAmount":
-                return String.valueOf(invoice.getTotalAmount());
-            case "paidAmount":
-                return String.valueOf(invoice.getPaidAmount());
-            case "remainingAmount":
-                return String.valueOf(invoice.getRemainingAmount());
-            case "status":
-                return invoice.getStatus().name();
-            default:
-                return "";
+        try {
+            switch (column) {
+                case "id":
+                    return invoice.getId() != null ? String.valueOf(invoice.getId()) : "";
+                case "contractCode":
+                    return invoice.getContract() != null && invoice.getContract().getCode() != null 
+                        ? invoice.getContract().getCode() : "";
+                case "tenantName":
+                    return invoice.getContract() != null && invoice.getContract().getPrimaryTenant() != null
+                        ? invoice.getContract().getPrimaryTenant().getFullName() : "";
+                case "roomCode":
+                    return invoice.getContract() != null && invoice.getContract().getRoom() != null
+                        && invoice.getContract().getRoom().getCode() != null
+                        ? invoice.getContract().getRoom().getCode() : "";
+                case "periodStart":
+                    return invoice.getPeriodStart() != null 
+                        ? invoice.getPeriodStart().format(DateTimeFormatter.ISO_LOCAL_DATE) : "";
+                case "periodEnd":
+                    return invoice.getPeriodEnd() != null 
+                        ? invoice.getPeriodEnd().format(DateTimeFormatter.ISO_LOCAL_DATE) : "";
+                case "totalAmount":
+                    return invoice.getTotalAmount() != null ? String.valueOf(invoice.getTotalAmount()) : "0";
+                case "paidAmount":
+                    return invoice.getPaidAmount() != null ? String.valueOf(invoice.getPaidAmount()) : "0";
+                case "remainingAmount":
+                    return invoice.getRemainingAmount() != null ? String.valueOf(invoice.getRemainingAmount()) : "0";
+                case "status":
+                    return invoice.getStatus() != null ? invoice.getStatus().name() : "";
+                default:
+                    return "";
+            }
+        } catch (Exception e) {
+            return "";
         }
     }
 

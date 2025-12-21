@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MainLayout } from '../components/MainLayout';
 import { ExportModal } from '../components/ExportModal';
 import { invoiceApi, MeterReadingInput } from '../services/api/invoiceApi';
@@ -8,6 +9,7 @@ import { Invoice, Contract } from '../types';
 import './InvoicesPage.css';
 
 export const InvoicesPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
@@ -23,6 +25,13 @@ export const InvoicesPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    // Check if action=generate is in URL params
+    if (searchParams.get('action') === 'generate') {
+      setShowGenerateModal(true);
+      // Remove the query parameter from URL
+      searchParams.delete('action');
+      setSearchParams(searchParams, { replace: true });
+    }
   }, [statusFilter, currentPage, pageSize]);
 
   const loadData = async () => {
@@ -525,7 +534,7 @@ export const InvoicesPage: React.FC = () => {
           onClose={() => setShowExportModal(false)}
           entity="INVOICES"
           title="Invoices"
-          filters={{ status: statusFilter !== 'ALL' ? statusFilter : undefined }}
+          filters={statusFilter !== 'ALL' ? { status: statusFilter } : {}}
         />
       </div>
     </MainLayout>

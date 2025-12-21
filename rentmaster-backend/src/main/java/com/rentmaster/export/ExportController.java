@@ -7,9 +7,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/export")
@@ -20,7 +23,8 @@ public class ExportController {
     private ExportService exportService;
 
     @PostMapping("/excel")
-    public ResponseEntity<byte[]> exportToExcel(@RequestBody ExportRequest request) throws IOException {
+    public ResponseEntity<byte[]> exportToExcel(@RequestBody Map<String, Object> requestMap) throws IOException {
+        ExportRequest request = convertToExportRequest(requestMap);
         byte[] data = exportService.exportToExcel(request);
         
         String filename = generateFilename(request.getEntity(), "xlsx");
@@ -32,7 +36,8 @@ public class ExportController {
     }
 
     @PostMapping("/csv")
-    public ResponseEntity<byte[]> exportToCsv(@RequestBody ExportRequest request) {
+    public ResponseEntity<byte[]> exportToCsv(@RequestBody Map<String, Object> requestMap) {
+        ExportRequest request = convertToExportRequest(requestMap);
         byte[] data = exportService.exportToCsv(request);
         
         String filename = generateFilename(request.getEntity(), "csv");
@@ -44,7 +49,8 @@ public class ExportController {
     }
 
     @PostMapping("/pdf")
-    public ResponseEntity<byte[]> exportToPdf(@RequestBody ExportRequest request) {
+    public ResponseEntity<byte[]> exportToPdf(@RequestBody Map<String, Object> requestMap) {
+        ExportRequest request = convertToExportRequest(requestMap);
         byte[] data = exportService.exportToPdf(request);
         
         String filename = generateFilename(request.getEntity(), "pdf");
@@ -64,5 +70,48 @@ public class ExportController {
     private String generateFilename(String entity, String extension) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         return entity.toLowerCase() + "_export_" + timestamp + "." + extension;
+    }
+    
+    private ExportRequest convertToExportRequest(Map<String, Object> requestMap) {
+        ExportRequest request = new ExportRequest();
+        
+        if (requestMap.get("type") != null) {
+            request.setType(String.valueOf(requestMap.get("type")));
+        }
+        if (requestMap.get("entity") != null) {
+            request.setEntity(String.valueOf(requestMap.get("entity")));
+        }
+        if (requestMap.get("filters") != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> filters = (Map<String, Object>) requestMap.get("filters");
+            request.setFilters(filters);
+        }
+        if (requestMap.get("columns") != null) {
+            @SuppressWarnings("unchecked")
+            List<String> columns = (List<String>) requestMap.get("columns");
+            request.setColumns(columns);
+        }
+        if (requestMap.get("dateRange") != null) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> dateRangeMap = (Map<String, Object>) requestMap.get("dateRange");
+            if (dateRangeMap != null && !dateRangeMap.isEmpty()) {
+                ExportRequest.DateRange dateRange = new ExportRequest.DateRange();
+                if (dateRangeMap.get("startDate") != null) {
+                    String startDateStr = String.valueOf(dateRangeMap.get("startDate"));
+                    if (!startDateStr.isEmpty() && !startDateStr.equals("null")) {
+                        dateRange.setStartDate(LocalDate.parse(startDateStr));
+                    }
+                }
+                if (dateRangeMap.get("endDate") != null) {
+                    String endDateStr = String.valueOf(dateRangeMap.get("endDate"));
+                    if (!endDateStr.isEmpty() && !endDateStr.equals("null")) {
+                        dateRange.setEndDate(LocalDate.parse(endDateStr));
+                    }
+                }
+                request.setDateRange(dateRange);
+            }
+        }
+        
+        return request;
     }
 }

@@ -142,7 +142,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
@@ -159,7 +159,8 @@
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .modal-content.large {
@@ -172,6 +173,7 @@
   align-items: center;
   padding: 1.5rem;
   border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
 }
 
 .modal-header h2 {
@@ -215,18 +217,19 @@
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 0.875rem;
+  padding: 0.875rem 1rem;
   background-color: var(--bg-input);
-  border: 1px solid var(--border-color);
+  border: 1.5px solid var(--border-color);
   border-radius: var(--border-radius);
   color: var(--text-primary);
   font-size: 0.9375rem;
@@ -234,12 +237,20 @@
   box-sizing: border-box;
 }
 
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: var(--bg-input);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
 }
 
 .form-group input::placeholder,

@@ -1,8 +1,10 @@
 package com.rentmaster.dashboard;
 
+import com.rentmaster.automation.RecurringInvoiceRepository;
 import com.rentmaster.billing.InvoiceRepository;
 import com.rentmaster.billing.PaymentRepository;
 import com.rentmaster.contract.ContractRepository;
+import com.rentmaster.messaging.TenantFeedbackRepository;
 import com.rentmaster.property.PropertyRepository;
 import com.rentmaster.tenant.TenantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,12 @@ public class DashboardService {
 
     @Autowired
     private TenantRepository tenantRepository;
+
+    @Autowired
+    private RecurringInvoiceRepository recurringInvoiceRepository;
+
+    @Autowired
+    private TenantFeedbackRepository tenantFeedbackRepository;
 
     public Map<String, Object> getEnhancedDashboardData() {
         Map<String, Object> data = new HashMap<>();
@@ -204,17 +212,28 @@ public class DashboardService {
     public List<Map<String, Object>> getQuickActions() {
         List<Map<String, Object>> actions = new ArrayList<>();
         
+        // Count recurring invoices due for generation
+        long invoicesDueCount = recurringInvoiceRepository.findDueForGeneration(LocalDate.now()).size();
+        
+        // Count pending maintenance requests (TenantFeedback with type MAINTENANCE and status SUBMITTED or IN_REVIEW)
+        long pendingMaintenanceCount = tenantFeedbackRepository.findAll().stream()
+            .filter(feedback -> "MAINTENANCE".equals(feedback.getType()) && 
+                   ("SUBMITTED".equals(feedback.getStatus()) || "IN_REVIEW".equals(feedback.getStatus())))
+            .count();
+        
         actions.add(createQuickAction("add-tenant", "Add New Tenant", 
             "Onboard a new tenant to the system", "👤", "#3B82F6", "/tenants/new", true, null));
             
         actions.add(createQuickAction("generate-invoice", "Generate Invoice", 
-            "Create invoices for monthly rent", "🧾", "#EF4444", "/invoices/generate", true, 12));
+            "Create invoices for monthly rent", "🧾", "#EF4444", "/invoices/generate", true, 
+            invoicesDueCount > 0 ? (int) invoicesDueCount : null));
             
         actions.add(createQuickAction("record-payment", "Record Payment", 
             "Log a new payment received", "💰", "#10B981", "/payments/new", true, null));
             
         actions.add(createQuickAction("maintenance-request", "Maintenance Request", 
-            "Create a new maintenance request", "🔧", "#F59E0B", "/maintenance/new", true, 3));
+            "Create a new maintenance request", "🔧", "#F59E0B", "/maintenance/new", true, 
+            pendingMaintenanceCount > 0 ? (int) pendingMaintenanceCount : null));
             
         actions.add(createQuickAction("add-property", "Add Property", 
             "Register a new property", "🏢", "#6366F1", "/properties/new", true, null));

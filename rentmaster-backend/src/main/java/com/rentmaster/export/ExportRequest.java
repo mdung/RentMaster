@@ -1,5 +1,6 @@
 package com.rentmaster.export;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,10 @@ public class ExportRequest {
     private List<String> columns;
 
     public static class DateRange {
+        @JsonProperty("startDate")
         private LocalDate startDate;
+        
+        @JsonProperty("endDate")
         private LocalDate endDate;
 
         public LocalDate getStartDate() {

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/MainLayout';
 import { LineChart } from '../components/charts/LineChart';
 import { DonutChart } from '../components/charts/DonutChart';
@@ -19,6 +20,7 @@ import {
 import './DashboardPage.css';
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [revenueData, setRevenueData] = useState<RevenueData | null>(null);
   const [occupancyData, setOccupancyData] = useState<OccupancyData | null>(null);
@@ -400,8 +402,33 @@ export const DashboardPage: React.FC = () => {
         <QuickActionsWidget 
           actions={quickActions}
           onActionClick={(action) => {
-            // Handle navigation based on action
-            console.log('Quick action clicked:', action);
+            // Navigate based on action ID
+            switch (action.id) {
+              case 'generate-invoice':
+                navigate('/invoices?action=generate');
+                break;
+              case 'add-tenant':
+                navigate('/tenants?action=new');
+                break;
+              case 'record-payment':
+                navigate('/payments?action=new');
+                break;
+              case 'maintenance-request':
+                navigate('/property-management?tab=maintenance&action=new');
+                break;
+              case 'add-property':
+                navigate('/properties?action=new');
+                break;
+              case 'reports':
+                navigate('/analytics');
+                break;
+              default:
+                // Try to use action.action if it's a valid route
+                if (action.action && action.action.startsWith('/')) {
+                  navigate(action.action);
+                }
+                break;
+            }
           }}
         />
 
@@ -576,8 +603,40 @@ export const DashboardPage: React.FC = () => {
               activities={activities}
               maxItems={8}
               onActivityClick={(activity) => {
-                // Handle navigation to related entity
-                console.log('Activity clicked:', activity);
+                // Navigate based on activity type
+                if (activity.relatedEntityId) {
+                  switch (activity.type) {
+                    case 'PAYMENT':
+                      navigate(`/payments?highlight=${activity.relatedEntityId}`);
+                      break;
+                    case 'INVOICE':
+                      navigate(`/invoices?highlight=${activity.relatedEntityId}`);
+                      break;
+                    case 'CONTRACT':
+                      navigate(`/contracts?highlight=${activity.relatedEntityId}`);
+                      break;
+                    case 'TENANT':
+                      navigate(`/tenants?highlight=${activity.relatedEntityId}`);
+                      break;
+                    case 'MAINTENANCE':
+                      navigate(`/property-management?tab=maintenance&highlight=${activity.relatedEntityId}`);
+                      break;
+                    default:
+                      // Navigate to general page for the type
+                      if (activity.type === 'PAYMENT') navigate('/payments');
+                      else if (activity.type === 'INVOICE') navigate('/invoices');
+                      else if (activity.type === 'CONTRACT') navigate('/contracts');
+                      else if (activity.type === 'TENANT') navigate('/tenants');
+                      break;
+                  }
+                } else {
+                  // Navigate to general page if no specific entity ID
+                  if (activity.type === 'PAYMENT') navigate('/payments');
+                  else if (activity.type === 'INVOICE') navigate('/invoices');
+                  else if (activity.type === 'CONTRACT') navigate('/contracts');
+                  else if (activity.type === 'TENANT') navigate('/tenants');
+                  else if (activity.type === 'MAINTENANCE') navigate('/property-management?tab=maintenance');
+                }
               }}
             />
           </div>
@@ -587,8 +646,35 @@ export const DashboardPage: React.FC = () => {
               dueDates={dueDates}
               maxItems={6}
               onItemClick={(item) => {
-                // Handle navigation to related entity
-                console.log('Due date clicked:', item);
+                // Navigate based on due date type
+                if (item.relatedEntityId) {
+                  switch (item.type) {
+                    case 'INVOICE':
+                      navigate(`/invoices?highlight=${item.relatedEntityId}`);
+                      break;
+                    case 'CONTRACT':
+                      navigate(`/contracts?highlight=${item.relatedEntityId}`);
+                      break;
+                    case 'MAINTENANCE':
+                      navigate(`/property-management?tab=maintenance&highlight=${item.relatedEntityId}`);
+                      break;
+                    case 'INSPECTION':
+                      navigate(`/property-management?tab=inspections&highlight=${item.relatedEntityId}`);
+                      break;
+                    default:
+                      // Navigate to general page
+                      if (item.type === 'INVOICE') navigate('/invoices');
+                      else if (item.type === 'CONTRACT') navigate('/contracts');
+                      else if (item.type === 'MAINTENANCE') navigate('/property-management?tab=maintenance');
+                      break;
+                  }
+                } else {
+                  // Navigate to general page if no specific entity ID
+                  if (item.type === 'INVOICE') navigate('/invoices');
+                  else if (item.type === 'CONTRACT') navigate('/contracts');
+                  else if (item.type === 'MAINTENANCE') navigate('/property-management?tab=maintenance');
+                  else if (item.type === 'INSPECTION') navigate('/property-management?tab=inspections');
+                }
               }}
             />
           </div>

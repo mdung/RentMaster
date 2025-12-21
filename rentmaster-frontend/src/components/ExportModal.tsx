@@ -190,11 +190,13 @@ export const ExportModal: React.FC<ExportModalProps> = ({
               </div>
               {includeFilters && (
                 <div className="current-filters">
-                  {Object.entries(filters).map(([key, value]) => (
-                    <div key={key} className="filter-item">
-                      <strong>{formatColumnName(key)}:</strong> {String(value)}
-                    </div>
-                  ))}
+                  {Object.entries(filters)
+                    .filter(([key, value]) => value !== undefined && value !== null && value !== '')
+                    .map(([key, value]) => (
+                      <div key={key} className="filter-item">
+                        <strong>{formatColumnName(key)}:</strong> {String(value)}
+                      </div>
+                    ))}
                 </div>
               )}
             </div>
