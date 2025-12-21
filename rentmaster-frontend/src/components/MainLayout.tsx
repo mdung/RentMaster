@@ -20,6 +20,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showOrgMenu, setShowOrgMenu] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
 
   const handleLogout = async () => {
     try {
@@ -50,6 +51,38 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   }, [showUserMenu]);
 
   const isActive = (path: string) => location.pathname === path;
+  
+  const isPathInMenu = (paths: string[]) => paths.some(path => location.pathname.startsWith(path));
+
+  const toggleMenu = (menuKey: string) => {
+    setExpandedMenus(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(menuKey)) {
+        newSet.delete(menuKey);
+      } else {
+        newSet.add(menuKey);
+      }
+      return newSet;
+    });
+  };
+
+  // Auto-expand menu if current path is in its submenu
+  useEffect(() => {
+    const menuGroups = [
+      { key: 'properties', paths: ['/properties', '/property-management'] },
+      { key: 'tenants', paths: ['/tenants', '/tenant-portal'] },
+      { key: 'billing', paths: ['/contracts', '/invoices', '/payments', '/financial-management'] },
+      { key: 'communication', paths: ['/communication', '/messaging', '/community'] },
+      { key: 'administration', paths: ['/users', '/services', '/organizations'] },
+    ];
+
+    menuGroups.forEach(group => {
+      if (isPathInMenu(group.paths)) {
+        setExpandedMenus(prev => new Set(prev).add(group.key));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const getPageTitle = () => {
     const path = location.pathname;
@@ -107,69 +140,154 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <h2>RentMaster</h2>
         </div>
         <nav className="sidebar-nav">
-          <Link to="/dashboard" className={isActive('/dashboard') ? 'active' : ''}>
-            <span>📊</span> Dashboard
+          {/* Dashboard - Standalone */}
+          <Link to="/dashboard" className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}>
+            <span className="nav-icon">📊</span>
+            <span className="nav-label">Dashboard</span>
           </Link>
-          <Link to="/properties" className={isActive('/properties') ? 'active' : ''}>
-            <span>🏢</span> Properties & Rooms
+
+          {/* Properties - Menu Group */}
+          <div className={`nav-group ${isPathInMenu(['/properties', '/property-management']) ? 'active-group' : ''}`}>
+            <div className="nav-group-header" onClick={() => toggleMenu('properties')}>
+              <span className="nav-icon">🏢</span>
+              <span className="nav-label">Properties</span>
+              <span className={`nav-arrow ${expandedMenus.has('properties') ? 'expanded' : ''}`}>▼</span>
+            </div>
+            {expandedMenus.has('properties') && (
+              <div className="nav-submenu">
+                <Link to="/properties" className={`nav-subitem ${isActive('/properties') ? 'active' : ''}`}>
+                  <span>Properties & Rooms</span>
+                </Link>
+                <Link to="/property-management" className={`nav-subitem ${isActive('/property-management') ? 'active' : ''}`}>
+                  <span>Property Management</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Tenants - Menu Group */}
+          <div className={`nav-group ${isPathInMenu(['/tenants', '/tenant-portal']) ? 'active-group' : ''}`}>
+            <div className="nav-group-header" onClick={() => toggleMenu('tenants')}>
+              <span className="nav-icon">👥</span>
+              <span className="nav-label">Tenants</span>
+              <span className={`nav-arrow ${expandedMenus.has('tenants') ? 'expanded' : ''}`}>▼</span>
+            </div>
+            {expandedMenus.has('tenants') && (
+              <div className="nav-submenu">
+                <Link to="/tenants" className={`nav-subitem ${isActive('/tenants') ? 'active' : ''}`}>
+                  <span>Tenant Management</span>
+                </Link>
+                <Link to="/tenant-portal" className={`nav-subitem ${isActive('/tenant-portal') ? 'active' : ''}`}>
+                  <span>Tenant Portal</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Billing & Finance - Menu Group */}
+          <div className={`nav-group ${isPathInMenu(['/contracts', '/invoices', '/payments', '/financial-management']) ? 'active-group' : ''}`}>
+            <div className="nav-group-header" onClick={() => toggleMenu('billing')}>
+              <span className="nav-icon">💰</span>
+              <span className="nav-label">Billing & Finance</span>
+              <span className={`nav-arrow ${expandedMenus.has('billing') ? 'expanded' : ''}`}>▼</span>
+            </div>
+            {expandedMenus.has('billing') && (
+              <div className="nav-submenu">
+                <Link to="/contracts" className={`nav-subitem ${isActive('/contracts') ? 'active' : ''}`}>
+                  <span>Contracts</span>
+                </Link>
+                <Link to="/invoices" className={`nav-subitem ${isActive('/invoices') ? 'active' : ''}`}>
+                  <span>Invoices</span>
+                </Link>
+                <Link to="/payments" className={`nav-subitem ${isActive('/payments') ? 'active' : ''}`}>
+                  <span>Payments</span>
+                </Link>
+                <Link to="/financial-management" className={`nav-subitem ${isActive('/financial-management') ? 'active' : ''}`}>
+                  <span>Financial Management</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Communication - Menu Group */}
+          <div className={`nav-group ${isPathInMenu(['/communication', '/messaging', '/community']) ? 'active-group' : ''}`}>
+            <div className="nav-group-header" onClick={() => toggleMenu('communication')}>
+              <span className="nav-icon">💬</span>
+              <span className="nav-label">Communication</span>
+              <span className={`nav-arrow ${expandedMenus.has('communication') ? 'expanded' : ''}`}>▼</span>
+            </div>
+            {expandedMenus.has('communication') && (
+              <div className="nav-submenu">
+                <Link to="/communication" className={`nav-subitem ${isActive('/communication') ? 'active' : ''}`}>
+                  <span>Communication Center</span>
+                </Link>
+                <Link to="/messaging" className={`nav-subitem ${isActive('/messaging') ? 'active' : ''}`}>
+                  <span>Messaging</span>
+                </Link>
+                <Link to="/community" className={`nav-subitem ${isActive('/community') ? 'active' : ''}`}>
+                  <span>Community</span>
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Documents - Standalone */}
+          <Link to="/documents" className={`nav-item ${isActive('/documents') ? 'active' : ''}`}>
+            <span className="nav-icon">📁</span>
+            <span className="nav-label">Documents</span>
           </Link>
-          <Link to="/property-management" className={isActive('/property-management') ? 'active' : ''}>
-            <span>🏗️</span> Property Mgmt
+
+          {/* Analytics - Standalone */}
+          <Link to="/analytics" className={`nav-item ${isActive('/analytics') ? 'active' : ''}`}>
+            <span className="nav-icon">📈</span>
+            <span className="nav-label">Analytics</span>
           </Link>
-          <Link to="/tenants" className={isActive('/tenants') ? 'active' : ''}>
-            <span>👥</span> Tenants
+
+          {/* Automation - Standalone */}
+          <Link to="/automation" className={`nav-item ${isActive('/automation') ? 'active' : ''}`}>
+            <span className="nav-icon">⚙️</span>
+            <span className="nav-label">Automation</span>
           </Link>
-          <Link to="/tenant-portal" className={isActive('/tenant-portal') ? 'active' : ''}>
-            <span>🏠</span> Tenant Portal
+
+          {/* Integrations - Standalone */}
+          <Link to="/integrations" className={`nav-item ${isActive('/integrations') ? 'active' : ''}`}>
+            <span className="nav-icon">🔌</span>
+            <span className="nav-label">Integrations</span>
           </Link>
-          <Link to="/contracts" className={isActive('/contracts') ? 'active' : ''}>
-            <span>📄</span> Contracts
+
+          {/* Search & AI - Standalone */}
+          <Link to="/search" className={`nav-item ${isActive('/search') ? 'active' : ''}`}>
+            <span className="nav-icon">🔍</span>
+            <span className="nav-label">Search & AI</span>
           </Link>
-          <Link to="/invoices" className={isActive('/invoices') ? 'active' : ''}>
-            <span>🧾</span> Invoices
+
+          {/* Localization - Standalone */}
+          <Link to="/localization" className={`nav-item ${isActive('/localization') ? 'active' : ''}`}>
+            <span className="nav-icon">🌐</span>
+            <span className="nav-label">Localization</span>
           </Link>
-          <Link to="/payments" className={isActive('/payments') ? 'active' : ''}>
-            <span>💰</span> Payments
-          </Link>
-          <Link to="/financial-management" className={isActive('/financial-management') ? 'active' : ''}>
-            <span>💼</span> Financial Mgmt
-          </Link>
-          <Link to="/analytics" className={isActive('/analytics') ? 'active' : ''}>
-            <span>📈</span> Analytics
-          </Link>
-          <Link to="/documents" className={isActive('/documents') ? 'active' : ''}>
-            <span>📁</span> Documents
-          </Link>
-          <Link to="/communication" className={isActive('/communication') ? 'active' : ''}>
-            <span>💬</span> Communication
-          </Link>
-          <Link to="/messaging" className={isActive('/messaging') ? 'active' : ''}>
-            <span>📧</span> Messaging
-          </Link>
-          <Link to="/community" className={isActive('/community') ? 'active' : ''}>
-            <span>🤝</span> Community
-          </Link>
-          <Link to="/automation" className={isActive('/automation') ? 'active' : ''}>
-            <span>⚙️</span> Automation
-          </Link>
-          <Link to="/integrations" className={isActive('/integrations') ? 'active' : ''}>
-            <span>🔌</span> Integrations
-          </Link>
-          <Link to="/search" className={isActive('/search') ? 'active' : ''}>
-            <span>🔍</span> Search & AI
-          </Link>
-          <Link to="/localization" className={isActive('/localization') ? 'active' : ''}>
-            <span>🌐</span> Localization
-          </Link>
-          <Link to="/users" className={isActive('/users') ? 'active' : ''}>
-            <span>👤</span> Users
-          </Link>
-          <Link to="/services" className={isActive('/services') ? 'active' : ''}>
-            <span>🔧</span> Services
-          </Link>
-          <Link to="/organizations" className={isActive('/organizations') ? 'active' : ''}>
-            <span>🏢</span> Organizations
-          </Link>
+
+          {/* Administration - Menu Group */}
+          <div className={`nav-group ${isPathInMenu(['/users', '/services', '/organizations']) ? 'active-group' : ''}`}>
+            <div className="nav-group-header" onClick={() => toggleMenu('administration')}>
+              <span className="nav-icon">⚙️</span>
+              <span className="nav-label">Administration</span>
+              <span className={`nav-arrow ${expandedMenus.has('administration') ? 'expanded' : ''}`}>▼</span>
+            </div>
+            {expandedMenus.has('administration') && (
+              <div className="nav-submenu">
+                <Link to="/users" className={`nav-subitem ${isActive('/users') ? 'active' : ''}`}>
+                  <span>Users</span>
+                </Link>
+                <Link to="/services" className={`nav-subitem ${isActive('/services') ? 'active' : ''}`}>
+                  <span>Services</span>
+                </Link>
+                <Link to="/organizations" className={`nav-subitem ${isActive('/organizations') ? 'active' : ''}`}>
+                  <span>Organizations</span>
+                </Link>
+              </div>
+            )}
+          </div>
         </nav>
         <div style={{ padding: '1rem', borderTop: '1px solid var(--border-color)', marginTop: 'auto' }}>
           <div className="user-avatar" style={{ width: '40px', height: '40px', margin: '0 auto' }}>

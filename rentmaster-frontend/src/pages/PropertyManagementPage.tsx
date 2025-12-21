@@ -173,7 +173,7 @@ export const PropertyManagementPage: React.FC = () => {
         let imageUrl = img.filePath;
         // If it's not already a full URL, construct it
         if (!imageUrl.startsWith('http')) {
-          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+          const apiBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080';
           imageUrl = imageUrl.startsWith('/') 
             ? `${apiBaseUrl}${imageUrl}`
             : `${apiBaseUrl}/api/files/${imageUrl}`;
@@ -203,7 +203,7 @@ export const PropertyManagementPage: React.FC = () => {
         let imageUrl = fp.filePath;
         // If it's not already a full URL, construct it
         if (!imageUrl.startsWith('http')) {
-          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+          const apiBaseUrl = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8080';
           imageUrl = imageUrl.startsWith('/') 
             ? `${apiBaseUrl}${imageUrl}`
             : `${apiBaseUrl}/api/files/${imageUrl}`;
@@ -285,17 +285,27 @@ export const PropertyManagementPage: React.FC = () => {
           </div>
           
           <div className="property-selector">
-            <select 
-              value={selectedProperty} 
-              onChange={(e) => setSelectedProperty(Number(e.target.value))}
-              className="property-select"
-            >
-              {properties.map(property => (
-                <option key={property.id} value={property.id}>
-                  {property.name}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="property-select">
+              Property:
+            </label>
+            <div className="property-select-wrapper">
+              <select 
+                id="property-select"
+                value={selectedProperty} 
+                onChange={(e) => setSelectedProperty(Number(e.target.value))}
+                className="property-select"
+              >
+                {properties.length === 0 ? (
+                  <option value="">No properties available</option>
+                ) : (
+                  properties.map(property => (
+                    <option key={property.id} value={property.id}>
+                      {property.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
           </div>
         </div>
 

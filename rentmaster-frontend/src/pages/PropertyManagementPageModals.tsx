@@ -48,7 +48,7 @@ export const ImageUploadModal: React.FC<{
         </div>
         <form onSubmit={(e) => { e.preventDefault(); handleUpload(); }}>
           <div className="form-group">
-            <label>Image File *</label>
+            <label>Image File</label>
             <input
               type="file"
               accept="image/*"
@@ -57,7 +57,7 @@ export const ImageUploadModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Category *</label>
+            <label>Category</label>
             <select value={category} onChange={(e) => setCategory(e.target.value)} required>
               <option value="EXTERIOR">Exterior</option>
               <option value="INTERIOR">Interior</option>
@@ -143,7 +143,7 @@ export const AmenityModal: React.FC<{
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Name *</label>
+            <label>Name</label>
             <input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -159,7 +159,7 @@ export const AmenityModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Category *</label>
+            <label>Category</label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -271,7 +271,7 @@ export const FloorPlanModal: React.FC<{
         <form onSubmit={handleSubmit}>
           {!floorPlan && (
             <div className="form-group">
-              <label>Floor Plan File *</label>
+              <label>Floor Plan File</label>
               <input
                 type="file"
                 accept="image/*,.pdf"
@@ -281,7 +281,7 @@ export const FloorPlanModal: React.FC<{
             </div>
           )}
           <div className="form-group">
-            <label>Name *</label>
+            <label>Name</label>
             <input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -387,7 +387,7 @@ export const ScheduleModal: React.FC<{
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Title *</label>
+            <label>Title</label>
             <input
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -403,7 +403,7 @@ export const ScheduleModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Type *</label>
+            <label>Type</label>
             <select
               value={formData.maintenanceType}
               onChange={(e) => setFormData({ ...formData, maintenanceType: e.target.value })}
@@ -418,7 +418,7 @@ export const ScheduleModal: React.FC<{
             </select>
           </div>
           <div className="form-group">
-            <label>Frequency *</label>
+            <label>Frequency</label>
             <select
               value={formData.frequency}
               onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
@@ -432,7 +432,7 @@ export const ScheduleModal: React.FC<{
             </select>
           </div>
           <div className="form-group">
-            <label>Next Due Date *</label>
+            <label>Next Due Date</label>
             <input
               type="date"
               value={formData.nextDueDate}
@@ -463,7 +463,7 @@ export const ScheduleModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Priority *</label>
+            <label>Priority</label>
             <select
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
@@ -536,7 +536,7 @@ export const VendorModal: React.FC<{
         </div>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Name *</label>
+            <label>Name</label>
             <input
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -544,7 +544,7 @@ export const VendorModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Contact Person *</label>
+            <label>Contact Person</label>
             <input
               value={formData.contactPerson}
               onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
@@ -552,7 +552,7 @@ export const VendorModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Phone *</label>
+            <label>Phone</label>
             <input
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -560,7 +560,7 @@ export const VendorModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Email *</label>
+            <label>Email</label>
             <input
               type="email"
               value={formData.email}
@@ -577,7 +577,7 @@ export const VendorModal: React.FC<{
             />
           </div>
           <div className="form-group">
-            <label>Service Category *</label>
+            <label>Service Category</label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
