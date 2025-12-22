@@ -177,7 +177,7 @@ export const LocalizationPage: React.FC = () => {
         case 'language':
           if (editingItem?.id) {
             await localizationApi.updateLanguage(editingItem.id, formData);
-          } else {
+      } else {
             await localizationApi.createLanguage(formData);
           }
           await loadLanguages();
@@ -225,7 +225,7 @@ export const LocalizationPage: React.FC = () => {
           await loadLanguages();
           break;
         case 'translation':
-          await localizationApi.deleteTranslation(id);
+        await localizationApi.deleteTranslation(id);
           await loadTranslations();
           break;
       }
@@ -686,7 +686,7 @@ const LanguagesTab: React.FC<{
         <h3>🌐 Supported Languages</h3>
         <button className="btn btn-primary" onClick={onAdd}>
           <span>➕</span> Add Language
-        </button>
+          </button>
       </div>
 
       {languages.length === 0 ? (
@@ -697,58 +697,58 @@ const LanguagesTab: React.FC<{
           </div>
         </div>
       ) : (
-        <div className="languages-grid">
-          {languages.map((language) => (
+      <div className="languages-grid">
+        {languages.map((language) => (
             <div key={language.id || language.code} className="language-card">
-              <div className="language-header">
+            <div className="language-header">
                 <div className="language-flag">{language.flagIcon || '🌐'}</div>
-                <div className="language-info">
-                  <h4>{language.name}</h4>
+              <div className="language-info">
+                <h4>{language.name}</h4>
                   <p>{language.nativeName || language.name}</p>
-                  <span className="language-code">{language.code}</span>
-                </div>
-                <div className="language-status">
-                  {language.isDefault && <span className="default-badge">Default</span>}
+                <span className="language-code">{language.code}</span>
+              </div>
+              <div className="language-status">
+                {language.isDefault && <span className="default-badge">Default</span>}
                   {language.active !== false ? (
                     <span className="status-badge active">Active</span>
-                  ) : (
+                ) : (
                     <span className="status-badge inactive">Inactive</span>
-                  )}
-                </div>
-              </div>
-
-              {language.completionPercentage !== undefined && (
-                <div className="completion-progress">
-                  <div className="progress-label">
-                    <span>Completion</span>
-                    <span>{language.completionPercentage.toFixed(1)}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${language.completionPercentage}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="language-actions">
-                <button onClick={() => onEdit(language)} className="btn-icon" title="Edit">
-                  ✏️
-                </button>
-                {language.id && (
-                  <button
-                    onClick={() => onDelete(language.id!)}
-                    className="btn-icon danger"
-                    title="Delete"
-                  >
-                    🗑️
-                  </button>
                 )}
               </div>
             </div>
-          ))}
-        </div>
+
+              {language.completionPercentage !== undefined && (
+            <div className="completion-progress">
+              <div className="progress-label">
+                <span>Completion</span>
+                <span>{language.completionPercentage.toFixed(1)}%</span>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${language.completionPercentage}%` }}
+                />
+              </div>
+            </div>
+              )}
+
+            <div className="language-actions">
+                <button onClick={() => onEdit(language)} className="btn-icon" title="Edit">
+                  ✏️
+              </button>
+                {language.id && (
+              <button
+                    onClick={() => onDelete(language.id!)}
+                    className="btn-icon danger"
+                    title="Delete"
+              >
+                    🗑️
+              </button>
+                )}
+            </div>
+          </div>
+        ))}
+      </div>
       )}
     </div>
   );
@@ -821,13 +821,13 @@ const TranslationsTab: React.FC<{
         <div className="search-controls">
           <div className="search-input-wrapper">
             <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search translations..."
-              value={searchTerm}
+          <input
+            type="text"
+            placeholder="Search translations..."
+            value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="search-input"
-            />
+            className="search-input"
+          />
           </div>
           <button onClick={onAdd} className="btn btn-primary">
             <span>➕</span> Add Translation
@@ -876,42 +876,42 @@ const TranslationsTab: React.FC<{
             ) : (
               translations.map((translation) => (
                 <tr key={translation.id || translation.key}>
-                  <td className="key-cell">{translation.key}</td>
-                  <td className="value-cell">{translation.value}</td>
+                <td className="key-cell">{translation.key}</td>
+                <td className="value-cell">{translation.value}</td>
                   <td>{translation.category}</td>
                   <td>
-                    <div className="status-badges">
-                      {translation.isApproved ? (
-                        <span className="status-badge approved">Approved</span>
-                      ) : (
-                        <span className="status-badge pending">Pending</span>
-                      )}
-                      {translation.needsReview && (
+                  <div className="status-badges">
+                    {translation.isApproved ? (
+                      <span className="status-badge approved">Approved</span>
+                    ) : (
+                      <span className="status-badge pending">Pending</span>
+                    )}
+                    {translation.needsReview && (
                         <span className="status-badge review">Review</span>
-                      )}
-                    </div>
-                  </td>
+                    )}
+                  </div>
+                </td>
                   <td>
                     <div className="action-buttons">
-                      <button
+                  <button
                         onClick={() => onEdit(translation)}
                         className="btn-icon"
                         title="Edit"
-                      >
+                  >
                         ✏️
-                      </button>
+                  </button>
                       {translation.id && (
-                        <button
+                  <button
                           onClick={() => onDelete(translation.id!)}
                           className="btn-icon danger"
                           title="Delete"
-                        >
+                  >
                           🗑️
-                        </button>
+                  </button>
                       )}
                     </div>
-                  </td>
-                </tr>
+                </td>
+              </tr>
               ))
             )}
           </tbody>
@@ -944,57 +944,57 @@ const LocalesTab: React.FC<{
           </div>
         </div>
       ) : (
-        <div className="locales-grid">
+      <div className="locales-grid">
           {locales.map((locale) => (
             <div key={locale.id || locale.code} className="locale-card">
-              <div className="locale-header">
-                <h4>{locale.name}</h4>
-                <span className="locale-code">{locale.code}</span>
-              </div>
+            <div className="locale-header">
+              <h4>{locale.name}</h4>
+              <span className="locale-code">{locale.code}</span>
+            </div>
 
-              <div className="locale-details">
-                <div className="detail-row">
-                  <span className="label">Language:</span>
-                  <span className="value">{locale.languageCode}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">Country:</span>
-                  <span className="value">{locale.countryCode}</span>
-                </div>
+            <div className="locale-details">
+              <div className="detail-row">
+                <span className="label">Language:</span>
+                <span className="value">{locale.languageCode}</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Country:</span>
+                <span className="value">{locale.countryCode}</span>
+              </div>
                 {locale.currencyCode && (
-                  <div className="detail-row">
-                    <span className="label">Currency:</span>
-                    <span className="value">{locale.currencyCode}</span>
-                  </div>
+              <div className="detail-row">
+                <span className="label">Currency:</span>
+                <span className="value">{locale.currencyCode}</span>
+              </div>
                 )}
                 {locale.dateFormat && (
-                  <div className="detail-row">
-                    <span className="label">Date Format:</span>
-                    <span className="value">{locale.dateFormat}</span>
-                  </div>
+              <div className="detail-row">
+                <span className="label">Date Format:</span>
+                <span className="value">{locale.dateFormat}</span>
+              </div>
                 )}
                 {locale.timeFormat && (
-                  <div className="detail-row">
-                    <span className="label">Time Format:</span>
-                    <span className="value">{locale.timeFormat}</span>
-                  </div>
+              <div className="detail-row">
+                <span className="label">Time Format:</span>
+                <span className="value">{locale.timeFormat}</span>
+              </div>
                 )}
                 {locale.timeZone && (
-                  <div className="detail-row">
-                    <span className="label">Time Zone:</span>
-                    <span className="value">{locale.timeZone}</span>
-                  </div>
-                )}
+              <div className="detail-row">
+                <span className="label">Time Zone:</span>
+                <span className="value">{locale.timeZone}</span>
               </div>
+                )}
+            </div>
 
-              <div className="locale-actions">
+            <div className="locale-actions">
                 <button onClick={() => onEdit(locale)} className="btn-icon" title="Edit">
                   ✏️
-                </button>
-              </div>
+              </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
       )}
     </div>
   );
@@ -1035,52 +1035,52 @@ const CurrenciesTab: React.FC<{
           </div>
         </div>
       ) : (
-        <div className="currencies-grid">
-          {currencies.map((currency) => (
+      <div className="currencies-grid">
+        {currencies.map((currency) => (
             <div key={currency.id || currency.code} className="currency-card">
-              <div className="currency-header">
-                <div className="currency-symbol">{currency.symbol}</div>
-                <div className="currency-info">
-                  <h4>{currency.name}</h4>
-                  <span className="currency-code">{currency.code}</span>
-                </div>
+            <div className="currency-header">
+              <div className="currency-symbol">{currency.symbol}</div>
+              <div className="currency-info">
+                <h4>{currency.name}</h4>
+                <span className="currency-code">{currency.code}</span>
+              </div>
                 {currency.active !== false && (
                   <span className="status-badge active">Active</span>
                 )}
-              </div>
+            </div>
 
-              <div className="currency-details">
-                <div className="detail-row">
-                  <span className="label">Symbol Position:</span>
+            <div className="currency-details">
+              <div className="detail-row">
+                <span className="label">Symbol Position:</span>
                   <span className="value">{currency.symbolPosition || 'BEFORE'}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">Decimal Places:</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Decimal Places:</span>
                   <span className="value">{currency.decimalPlaces || 2}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">Decimal Separator:</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Decimal Separator:</span>
                   <span className="value">"{currency.decimalSeparator || '.'}"</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">Thousands Separator:</span>
+              </div>
+              <div className="detail-row">
+                <span className="label">Thousands Separator:</span>
                   <span className="value">"{currency.thousandsSeparator || ','}"</span>
-                </div>
-              </div>
-
-              <div className="currency-preview">
-                <h5>Preview:</h5>
-                <div className="preview-amount">{formatPreview(currency)}</div>
-              </div>
-
-              <div className="currency-actions">
-                <button onClick={() => onEdit(currency)} className="btn-icon" title="Edit">
-                  ✏️
-                </button>
               </div>
             </div>
-          ))}
-        </div>
+
+            <div className="currency-preview">
+              <h5>Preview:</h5>
+                <div className="preview-amount">{formatPreview(currency)}</div>
+            </div>
+
+            <div className="currency-actions">
+                <button onClick={() => onEdit(currency)} className="btn-icon" title="Edit">
+                  ✏️
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
       )}
     </div>
   );
@@ -1097,7 +1097,7 @@ const StatisticsTab: React.FC<{
         <h3>📊 Localization Statistics</h3>
         <button className="btn btn-secondary" onClick={onRefresh}>
           <span>🔄</span> Refresh
-        </button>
+          </button>
       </div>
 
       <div className="statistics-grid">
@@ -1143,23 +1143,23 @@ const StatisticsTab: React.FC<{
       </div>
 
       {statistics.completionRates && Object.keys(statistics.completionRates).length > 0 && (
-        <div className="completion-chart">
-          <h4>Translation Completion by Language</h4>
-          <div className="chart-container">
+      <div className="completion-chart">
+        <h4>Translation Completion by Language</h4>
+        <div className="chart-container">
             {Object.entries(statistics.completionRates).map(([lang, rate]: [string, any]) => (
-              <div key={lang} className="completion-bar">
-                <div className="bar-label">
-                  <span>{lang.toUpperCase()}</span>
+            <div key={lang} className="completion-bar">
+              <div className="bar-label">
+                <span>{lang.toUpperCase()}</span>
                   <span>{rate.toFixed(1)}%</span>
-                </div>
-                <div className="bar-track">
-                  <div
-                    className="bar-fill"
-                    style={{ width: `${rate}%` }}
-                  />
-                </div>
               </div>
-            ))}
+              <div className="bar-track">
+                <div
+                  className="bar-fill"
+                  style={{ width: `${rate}%` }}
+                />
+              </div>
+            </div>
+          ))}
           </div>
         </div>
       )}

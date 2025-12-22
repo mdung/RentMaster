@@ -220,6 +220,16 @@ public class FinancialController {
         }
     }
     
+    @PatchMapping("/currencies/{id}/set-default")
+    public ResponseEntity<Void> setDefaultCurrency(@PathVariable Long id) {
+        try {
+            financialService.setDefaultCurrency(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
     // Financial Statistics
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getFinancialStats(

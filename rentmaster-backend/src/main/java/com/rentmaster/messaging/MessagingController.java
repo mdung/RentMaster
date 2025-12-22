@@ -20,11 +20,16 @@ public class MessagingController {
     // Message Endpoints
     @GetMapping("/messages")
     public ResponseEntity<List<Message>> getMessages(
-            @RequestParam Long userId,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) Boolean unreadOnly) {
-        List<Message> messages = messagingService.getMessages(userId, type, unreadOnly);
-        return ResponseEntity.ok(messages);
+        try {
+            Long actualUserId = userId != null ? userId : 1L; // Default to 1 if not provided
+            List<Message> messages = messagingService.getMessages(actualUserId, type, unreadOnly);
+            return ResponseEntity.ok(messages);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/messages/conversation")
@@ -93,8 +98,12 @@ public class MessagingController {
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long propertyId,
             @RequestParam(required = false) String type) {
-        List<Announcement> announcements = messagingService.getAnnouncements(userId, propertyId, type);
-        return ResponseEntity.ok(announcements);
+        try {
+            List<Announcement> announcements = messagingService.getAnnouncements(userId, propertyId, type);
+            return ResponseEntity.ok(announcements);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/announcements/tenant/{tenantId}")
@@ -147,19 +156,33 @@ public class MessagingController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {
-        
-        LocalDateTime start = null;
-        LocalDateTime end = null;
-        
-        if (startDate != null) {
-            start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        try {
+            LocalDateTime start = null;
+            LocalDateTime end = null;
+            
+            if (startDate != null && !startDate.isEmpty()) {
+                try {
+                    // Try ISO format first
+                    start = LocalDateTime.parse(startDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                } catch (Exception e) {
+                    // Try date-only format
+                    start = LocalDateTime.parse(startDate + "T00:00:00", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                }
+            }
+            if (endDate != null && !endDate.isEmpty()) {
+                try {
+                    end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                } catch (Exception e) {
+                    end = LocalDateTime.parse(endDate + "T23:59:59", DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                }
+            }
+            
+            List<PropertyEvent> events = messagingService.getEvents(propertyId, type, status, start, end);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
         }
-        if (endDate != null) {
-            end = LocalDateTime.parse(endDate, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        }
-        
-        List<PropertyEvent> events = messagingService.getEvents(propertyId, type, status, start, end);
-        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/events/calendar")
@@ -270,8 +293,13 @@ public class MessagingController {
     // Statistics and Analytics
     @GetMapping("/statistics")
     public ResponseEntity<Map<String, Object>> getMessagingStatistics() {
-        Map<String, Object> stats = messagingService.getMessagingStatistics();
-        return ResponseEntity.ok(stats);
+        try {
+            Map<String, Object> stats = messagingService.getMessagingStatistics();
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @GetMapping("/dashboard")

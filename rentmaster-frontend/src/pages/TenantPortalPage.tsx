@@ -169,9 +169,9 @@ export const TenantPortalPage: React.FC = () => {
     );
   }
 
-  return (
+    return (
     <MainLayout>
-      <div className="tenant-portal-page">
+        <div className="tenant-portal-page">
         <div className="page-header">
           <div>
             <h1>Tenant Portal</h1>
@@ -821,7 +821,7 @@ const NotificationsTab: React.FC<{ notifications: TenantNotification[]; formatDa
           ))
         )}
       </div>
-    </div>
-  );
+        </div>
+    );
 };
 

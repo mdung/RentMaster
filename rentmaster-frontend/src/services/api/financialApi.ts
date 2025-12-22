@@ -119,10 +119,18 @@ export const financialApi = {
   },
 
   // Profit & Loss Reports
-  getProfitLossReport: async (startDate: string, endDate: string): Promise<ProfitLossReport> => {
-    const response = await apiClient.get<ProfitLossReport>(
-      `/financial/reports/profit-loss?startDate=${startDate}&endDate=${endDate}`
-    );
+  getProfitLossReport: async (startDate: string, endDate: string, propertyId?: number): Promise<ProfitLossReport> => {
+    const params: any = { startDate, endDate };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get<ProfitLossReport>('/financial/reports/profit-loss', { params });
+    return response.data;
+  },
+
+  // Cash Flow Reports
+  getCashFlowReport: async (startDate: string, endDate: string, propertyId?: number): Promise<any> => {
+    const params: any = { startDate, endDate };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get('/financial/reports/cash-flow', { params });
     return response.data;
   },
 
@@ -133,12 +141,10 @@ export const financialApi = {
     return response.data;
   },
 
-  generateTaxReport: async (year: number, quarter?: number): Promise<TaxReport> => {
-    const params = new URLSearchParams();
-    params.append('year', year.toString());
-    if (quarter) params.append('quarter', quarter.toString());
-
-    const response = await apiClient.post<TaxReport>(`/financial/tax-reports/generate?${params}`);
+  generateTaxReport: async (year: number, propertyId?: number): Promise<TaxReport> => {
+    const params: any = { year };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get<TaxReport>('/financial/reports/tax', { params });
     return response.data;
   },
 
@@ -173,6 +179,11 @@ export const financialApi = {
 
   createPaymentPlan: async (plan: CreatePaymentPlanRequest): Promise<PaymentPlan> => {
     const response = await apiClient.post<PaymentPlan>('/financial/payment-plans', plan);
+    return response.data;
+  },
+
+  updatePaymentPlan: async (id: number, plan: Partial<CreatePaymentPlanRequest>): Promise<PaymentPlan> => {
+    const response = await apiClient.put<PaymentPlan>(`/financial/payment-plans/${id}`, plan);
     return response.data;
   },
 

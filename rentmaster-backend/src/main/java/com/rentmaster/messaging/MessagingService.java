@@ -437,50 +437,62 @@ public class MessagingService {
     public Map<String, Object> getMessagingStatistics() {
         Map<String, Object> stats = new HashMap<>();
         
-        // Message statistics
-        List<Object[]> messageStatsByType = messageRepository.getMessageStatsByType();
-        Map<String, Long> messageTypeStats = new HashMap<>();
-        for (Object[] stat : messageStatsByType) {
-            messageTypeStats.put((String) stat[0], (Long) stat[1]);
+        try {
+            // Message statistics - calculate from actual data
+            List<Message> allMessages = messageRepository.findAll();
+            Map<String, Long> messageTypeStats = allMessages.stream()
+                .filter(m -> !m.getIsDeleted())
+                .collect(Collectors.groupingBy(Message::getMessageType, Collectors.counting()));
+            
+            Map<String, Long> messagePriorityStats = allMessages.stream()
+                .filter(m -> !m.getIsDeleted())
+                .collect(Collectors.groupingBy(Message::getPriority, Collectors.counting()));
+            
+            // Announcement statistics
+            List<Announcement> allAnnouncements = announcementRepository.findAll();
+            Map<String, Long> announcementTypeStats = allAnnouncements.stream()
+                .filter(a -> a.getIsActive())
+                .collect(Collectors.groupingBy(Announcement::getType, Collectors.counting()));
+            
+            // Event statistics
+            List<PropertyEvent> allEvents = propertyEventRepository.findAll();
+            Map<String, Long> eventTypeStats = allEvents.stream()
+                .collect(Collectors.groupingBy(PropertyEvent::getType, Collectors.counting()));
+            
+            // Feedback statistics
+            List<TenantFeedback> allFeedback = tenantFeedbackRepository.findAll();
+            Map<String, Long> feedbackTypeStats = allFeedback.stream()
+                .collect(Collectors.groupingBy(TenantFeedback::getType, Collectors.counting()));
+            
+            Double averageRating = allFeedback.stream()
+                .filter(f -> f.getRating() != null)
+                .mapToDouble(TenantFeedback::getRating)
+                .average()
+                .orElse(0.0);
+            
+            Double averageSatisfaction = allFeedback.stream()
+                .filter(f -> f.getSatisfactionRating() != null)
+                .mapToDouble(TenantFeedback::getSatisfactionRating)
+                .average()
+                .orElse(0.0);
+            
+            stats.put("messagesByType", messageTypeStats);
+            stats.put("messagesByPriority", messagePriorityStats);
+            stats.put("announcementsByType", announcementTypeStats);
+            stats.put("eventsByType", eventTypeStats);
+            stats.put("feedbackByType", feedbackTypeStats);
+            stats.put("averageFeedbackRating", averageRating);
+            stats.put("averageSatisfactionRating", averageSatisfaction);
+        } catch (Exception e) {
+            // Return empty stats if there's an error
+            stats.put("messagesByType", new HashMap<>());
+            stats.put("messagesByPriority", new HashMap<>());
+            stats.put("announcementsByType", new HashMap<>());
+            stats.put("eventsByType", new HashMap<>());
+            stats.put("feedbackByType", new HashMap<>());
+            stats.put("averageFeedbackRating", 0.0);
+            stats.put("averageSatisfactionRating", 0.0);
         }
-        
-        List<Object[]> messageStatsByPriority = messageRepository.getMessageStatsByPriority();
-        Map<String, Long> messagePriorityStats = new HashMap<>();
-        for (Object[] stat : messageStatsByPriority) {
-            messagePriorityStats.put((String) stat[0], (Long) stat[1]);
-        }
-        
-        // Announcement statistics
-        List<Object[]> announcementStatsByType = announcementRepository.getAnnouncementStatsByType();
-        Map<String, Long> announcementTypeStats = new HashMap<>();
-        for (Object[] stat : announcementStatsByType) {
-            announcementTypeStats.put((String) stat[0], (Long) stat[1]);
-        }
-        
-        // Event statistics
-        List<Object[]> eventStatsByType = propertyEventRepository.getEventStatsByType();
-        Map<String, Long> eventTypeStats = new HashMap<>();
-        for (Object[] stat : eventStatsByType) {
-            eventTypeStats.put((String) stat[0], (Long) stat[1]);
-        }
-        
-        // Feedback statistics
-        List<Object[]> feedbackStatsByType = tenantFeedbackRepository.getFeedbackStatsByType();
-        Map<String, Long> feedbackTypeStats = new HashMap<>();
-        for (Object[] stat : feedbackStatsByType) {
-            feedbackTypeStats.put((String) stat[0], (Long) stat[1]);
-        }
-        
-        Double averageRating = tenantFeedbackRepository.getAverageRating();
-        Double averageSatisfaction = tenantFeedbackRepository.getAverageSatisfactionRating();
-        
-        stats.put("messagesByType", messageTypeStats);
-        stats.put("messagesByPriority", messagePriorityStats);
-        stats.put("announcementsByType", announcementTypeStats);
-        stats.put("eventsByType", eventTypeStats);
-        stats.put("feedbackByType", feedbackTypeStats);
-        stats.put("averageFeedbackRating", averageRating != null ? averageRating : 0.0);
-        stats.put("averageSatisfactionRating", averageSatisfaction != null ? averageSatisfaction : 0.0);
         
         return stats;
     }
@@ -488,27 +500,53 @@ public class MessagingService {
     public Map<String, Object> getDashboardData(Long userId) {
         Map<String, Object> data = new HashMap<>();
         
-        // Recent messages
-        LocalDateTime since = LocalDateTime.now().minusDays(7);
-        List<Message> recentMessages = messageRepository.findRecentMessagesForUser(userId, since);
-        
-        // Unread count
-        long unreadCount = messageRepository.countByRecipientIdAndIsReadFalseAndIsDeletedFalse(userId);
-        
-        // Recent announcements
-        List<Announcement> recentAnnouncements = announcementRepository.findRecentAnnouncements(since);
-        
-        // Upcoming events
-        List<PropertyEvent> upcomingEvents = propertyEventRepository.findUpcomingEvents(LocalDateTime.now());
-        
-        // Recent feedback
-        List<TenantFeedback> recentFeedback = tenantFeedbackRepository.findRecentFeedback(since);
-        
-        data.put("recentMessages", recentMessages.stream().limit(10).collect(Collectors.toList()));
-        data.put("unreadMessageCount", unreadCount);
-        data.put("recentAnnouncements", recentAnnouncements.stream().limit(5).collect(Collectors.toList()));
-        data.put("upcomingEvents", upcomingEvents.stream().limit(5).collect(Collectors.toList()));
-        data.put("recentFeedback", recentFeedback.stream().limit(5).collect(Collectors.toList()));
+        try {
+            // Recent messages - get all and filter
+            LocalDateTime since = LocalDateTime.now().minusDays(7);
+            List<Message> allMessages = messageRepository.findByRecipientIdAndIsDeletedFalseOrderByCreatedAtDesc(userId);
+            List<Message> recentMessages = allMessages.stream()
+                .filter(m -> m.getCreatedAt() != null && m.getCreatedAt().isAfter(since))
+                .limit(10)
+                .collect(Collectors.toList());
+            
+            // Unread count
+            long unreadCount = messageRepository.countByRecipientIdAndIsReadFalseAndIsDeletedFalse(userId);
+            
+            // Recent announcements
+            List<Announcement> allAnnouncements = announcementRepository.findByIsActiveTrueOrderByIsPinnedDescPublishDateDesc();
+            List<Announcement> recentAnnouncements = allAnnouncements.stream()
+                .filter(a -> a.getPublishDate() != null && a.getPublishDate().isAfter(since))
+                .limit(5)
+                .collect(Collectors.toList());
+            
+            // Upcoming events
+            List<PropertyEvent> allEvents = propertyEventRepository.findAll();
+            List<PropertyEvent> upcomingEvents = allEvents.stream()
+                .filter(e -> e.getStartDateTime() != null && e.getStartDateTime().isAfter(LocalDateTime.now()))
+                .sorted(Comparator.comparing(PropertyEvent::getStartDateTime))
+                .limit(5)
+                .collect(Collectors.toList());
+            
+            // Recent feedback
+            List<TenantFeedback> allFeedback = tenantFeedbackRepository.findAll();
+            List<TenantFeedback> recentFeedback = allFeedback.stream()
+                .filter(f -> f.getCreatedAt() != null && f.getCreatedAt().isAfter(since))
+                .limit(5)
+                .collect(Collectors.toList());
+            
+            data.put("recentMessages", recentMessages);
+            data.put("unreadMessageCount", unreadCount);
+            data.put("recentAnnouncements", recentAnnouncements);
+            data.put("upcomingEvents", upcomingEvents);
+            data.put("recentFeedback", recentFeedback);
+        } catch (Exception e) {
+            // Return empty data if there's an error
+            data.put("recentMessages", new ArrayList<>());
+            data.put("unreadMessageCount", 0L);
+            data.put("recentAnnouncements", new ArrayList<>());
+            data.put("upcomingEvents", new ArrayList<>());
+            data.put("recentFeedback", new ArrayList<>());
+        }
         
         return data;
     }
