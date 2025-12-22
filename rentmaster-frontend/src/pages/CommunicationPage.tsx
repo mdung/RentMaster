@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { MainLayout } from '../components/MainLayout';
-import { communicationApi } from '../services/api/communicationApi';
+import { communicationApi, EmailTemplateCreateData, SMSTemplateCreateData, NotificationChannelCreateData, BulkCommunicationCreateData, NotificationPreferenceCreateData } from '../services/api/communicationApi';
 import {
   EmailTemplate,
   SMSTemplate,
@@ -10,6 +10,7 @@ import {
   NotificationPreference,
 } from '../types';
 import './CommunicationPage.css';
+import './shared-styles.css';
 
 export const CommunicationPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'templates' | 'channels' | 'logs' | 'bulk' | 'preferences'>('overview');
@@ -21,10 +22,28 @@ export const CommunicationPage: React.FC = () => {
   const [bulkCommunications, setBulkCommunications] = useState<BulkCommunication[]>([]);
   const [preferences, setPreferences] = useState<NotificationPreference[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<'emailTemplate' | 'smsTemplate' | 'channel' | 'bulk' | 'preference' | 'preview' | 'details'>('emailTemplate');
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [detailsData, setDetailsData] = useState<any>(null);
+  
+  // Filter states
+  const [logChannelFilter, setLogChannelFilter] = useState('');
+  const [logStatusFilter, setLogStatusFilter] = useState('');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      loadLogs();
+    }
+  }, [logChannelFilter, logStatusFilter]);
 
   const loadData = async () => {
     try {
@@ -58,6 +77,20 @@ export const CommunicationPage: React.FC = () => {
       console.error('Failed to load communication data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLogs = async () => {
+    try {
+      const logsData = await communicationApi.getCommunicationLogs({
+        page: 0,
+        size: 50,
+        channel: logChannelFilter || undefined,
+        status: logStatusFilter || undefined,
+      });
+      setCommunicationLogs(logsData.content);
+    } catch (error) {
+      console.error('Failed to load logs:', error);
     }
   };
 
@@ -98,6 +131,145 @@ export const CommunicationPage: React.FC = () => {
       case 'SENDING': return 'warning';
       case 'FAILED': return 'danger';
       default: return 'gray';
+    }
+  };
+
+  const handleOpenModal = (type: 'emailTemplate' | 'smsTemplate' | 'channel' | 'bulk' | 'preference' | 'preview' | 'details', item?: any) => {
+    setModalType(type);
+    setEditingItem(item || null);
+    if (item) {
+      setFormData(item);
+    } else {
+      // Set default form data
+      switch (type) {
+        case 'emailTemplate':
+          setFormData({ active: true, isDefault: false, variables: [], templateType: 'CUSTOM' });
+          break;
+        case 'smsTemplate':
+          setFormData({ active: true, variables: [], templateType: 'CUSTOM' });
+          break;
+        case 'channel':
+          setFormData({ active: true, isDefault: false, type: 'EMAIL', configuration: {} });
+          break;
+        case 'bulk':
+          setFormData({ recipientType: 'ALL_TENANTS', channels: ['EMAIL'], recipientIds: [] });
+          break;
+        case 'preference':
+          setFormData({ enabled: true, frequency: 'IMMEDIATE', channels: ['EMAIL'], quietHours: { enabled: false, startTime: '22:00', endTime: '08:00' } });
+          break;
+      }
+    }
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setEditingItem(null);
+    setFormData({});
+    setPreviewData(null);
+    setDetailsData(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      switch (modalType) {
+        case 'emailTemplate':
+          if (editingItem?.id) {
+            await communicationApi.updateEmailTemplate(editingItem.id, formData);
+          } else {
+            await communicationApi.createEmailTemplate(formData as EmailTemplateCreateData);
+          }
+          break;
+        case 'smsTemplate':
+          if (editingItem?.id) {
+            await communicationApi.updateSMSTemplate(editingItem.id, formData);
+          } else {
+            await communicationApi.createSMSTemplate(formData as SMSTemplateCreateData);
+          }
+          break;
+        case 'channel':
+          if (editingItem?.id) {
+            await communicationApi.updateNotificationChannel(editingItem.id, formData);
+          } else {
+            await communicationApi.createNotificationChannel(formData as NotificationChannelCreateData);
+          }
+          break;
+        case 'bulk':
+          if (editingItem?.id) {
+            await communicationApi.updateBulkCommunication(editingItem.id, formData);
+          } else {
+            await communicationApi.createBulkCommunication(formData as BulkCommunicationCreateData);
+          }
+          break;
+        case 'preference':
+          if (editingItem?.id) {
+            await communicationApi.updateNotificationPreference(editingItem.id, formData);
+          } else {
+            await communicationApi.createNotificationPreference(formData as NotificationPreferenceCreateData);
+          }
+          break;
+      }
+      handleCloseModal();
+      await loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || `Failed to save ${modalType}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (type: string, id: number) => {
+    if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+    try {
+      switch (type) {
+        case 'emailTemplate':
+          await communicationApi.deleteEmailTemplate(id);
+          break;
+        case 'smsTemplate':
+          await communicationApi.deleteSMSTemplate(id);
+          break;
+        case 'channel':
+          await communicationApi.deleteNotificationChannel(id);
+          break;
+        case 'bulk':
+          await communicationApi.deleteBulkCommunication(id);
+          break;
+      }
+      await loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || `Failed to delete ${type}`);
+    }
+  };
+
+  const handlePreview = async (type: 'email' | 'sms', id: number) => {
+    try {
+      if (type === 'email') {
+        const preview = await communicationApi.previewEmailTemplate(id, {});
+        setPreviewData(preview);
+        handleOpenModal('preview');
+      } else {
+        // SMS preview - just show the template
+        const template = smsTemplates.find(t => t.id === id);
+        if (template) {
+          setPreviewData({ message: template.message });
+          handleOpenModal('preview');
+        }
+      }
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to preview template');
+    }
+  };
+
+  const handleSendBulk = async (id: number) => {
+    if (!confirm('Are you sure you want to send this bulk communication now?')) return;
+    try {
+      await communicationApi.sendBulkCommunication(id);
+      alert('Bulk communication sent successfully!');
+      await loadData();
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to send bulk communication');
     }
   };
 
@@ -150,7 +322,7 @@ export const CommunicationPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading && !stats) {
     return (
       <MainLayout>
         <div className="communication-page">
@@ -219,41 +391,41 @@ export const CommunicationPage: React.FC = () => {
                 <div className="stat-card">
                   <div className="stat-icon">📧</div>
                   <div className="stat-content">
-                    <div className="stat-value">{stats.activeEmailTemplates}</div>
+                    <div className="stat-value">{stats.activeEmailTemplates || 0}</div>
                     <div className="stat-label">Active Email Templates</div>
-                    <div className="stat-sublabel">of {stats.totalEmailTemplates} total</div>
+                    <div className="stat-sublabel">of {stats.totalEmailTemplates || 0} total</div>
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon">📱</div>
                   <div className="stat-content">
-                    <div className="stat-value">{stats.activeSMSTemplates}</div>
+                    <div className="stat-value">{stats.activeSMSTemplates || 0}</div>
                     <div className="stat-label">Active SMS Templates</div>
-                    <div className="stat-sublabel">of {stats.totalSMSTemplates} total</div>
+                    <div className="stat-sublabel">of {stats.totalSMSTemplates || 0} total</div>
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon">📡</div>
                   <div className="stat-content">
-                    <div className="stat-value">{stats.activeChannels}</div>
+                    <div className="stat-value">{stats.activeChannels || 0}</div>
                     <div className="stat-label">Active Channels</div>
-                    <div className="stat-sublabel">of {stats.totalChannels} total</div>
+                    <div className="stat-sublabel">of {stats.totalChannels || 0} total</div>
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon">📊</div>
                   <div className="stat-content">
-                    <div className="stat-value">{stats.communicationsToday}</div>
+                    <div className="stat-value">{stats.communicationsToday || 0}</div>
                     <div className="stat-label">Communications Today</div>
-                    <div className="stat-sublabel">{stats.deliveryRate}% delivery rate</div>
+                    <div className="stat-sublabel">{stats.deliveryRate || 0}% delivery rate</div>
                   </div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-icon">🎯</div>
                   <div className="stat-content">
-                    <div className="stat-value">{stats.deliveryRate}%</div>
+                    <div className="stat-value">{stats.deliveryRate || 0}%</div>
                     <div className="stat-label">Success Rate</div>
-                    <div className="stat-sublabel">{stats.failureRate}% failure rate</div>
+                    <div className="stat-sublabel">{stats.failureRate || 0}% failure rate</div>
                   </div>
                 </div>
               </div>
@@ -312,7 +484,10 @@ export const CommunicationPage: React.FC = () => {
               <div className="templates-section">
                 <div className="section-header">
                   <h2>Email Templates</h2>
-                  <button className="btn btn-primary">
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => handleOpenModal('emailTemplate')}
+                  >
                     <span>➕</span> Add Email Template
                   </button>
                 </div>
@@ -347,7 +522,7 @@ export const CommunicationPage: React.FC = () => {
                               <span className="status-badge info">{template.templateType}</span>
                             </td>
                             <td>{template.subject}</td>
-                            <td>{template.variables.length} variable(s)</td>
+                            <td>{template.variables?.length || 0} variable(s)</td>
                             <td>
                               <span className={`status-badge ${template.isDefault ? 'success' : 'gray'}`}>
                                 {template.isDefault ? 'Yes' : 'No'}
@@ -367,13 +542,25 @@ export const CommunicationPage: React.FC = () => {
                                 >
                                   {template.active ? '⏸️' : '▶️'}
                                 </button>
-                                <button className="btn-icon" title="Preview">
+                                <button 
+                                  className="btn-icon" 
+                                  title="Preview"
+                                  onClick={() => handlePreview('email', template.id)}
+                                >
                                   👁️
                                 </button>
-                                <button className="btn-icon" title="Edit">
+                                <button 
+                                  className="btn-icon" 
+                                  title="Edit"
+                                  onClick={() => handleOpenModal('emailTemplate', template)}
+                                >
                                   ✏️
                                 </button>
-                                <button className="btn-icon danger" title="Delete">
+                                <button 
+                                  className="btn-icon danger" 
+                                  title="Delete"
+                                  onClick={() => handleDelete('emailTemplate', template.id)}
+                                >
                                   🗑️
                                 </button>
                               </div>
@@ -389,7 +576,10 @@ export const CommunicationPage: React.FC = () => {
               <div className="templates-section">
                 <div className="section-header">
                   <h2>SMS Templates</h2>
-                  <button className="btn btn-primary">
+                  <button 
+                    className="btn btn-primary"
+                    onClick={() => handleOpenModal('smsTemplate')}
+                  >
                     <span>➕</span> Add SMS Template
                   </button>
                 </div>
@@ -424,13 +614,13 @@ export const CommunicationPage: React.FC = () => {
                             </td>
                             <td>
                               <div className="message-preview">
-                                {template.message.length > 50 
+                                {template.message?.length > 50 
                                   ? `${template.message.substring(0, 50)}...`
                                   : template.message
                                 }
                               </div>
                             </td>
-                            <td>{template.variables.length} variable(s)</td>
+                            <td>{template.variables?.length || 0} variable(s)</td>
                             <td>
                               <span className={`status-badge ${getStatusBadgeClass(template.active ? 'ACTIVE' : 'INACTIVE')}`}>
                                 {template.active ? 'Active' : 'Inactive'}
@@ -445,13 +635,25 @@ export const CommunicationPage: React.FC = () => {
                                 >
                                   {template.active ? '⏸️' : '▶️'}
                                 </button>
-                                <button className="btn-icon" title="Preview">
+                                <button 
+                                  className="btn-icon" 
+                                  title="Preview"
+                                  onClick={() => handlePreview('sms', template.id)}
+                                >
                                   👁️
                                 </button>
-                                <button className="btn-icon" title="Edit">
+                                <button 
+                                  className="btn-icon" 
+                                  title="Edit"
+                                  onClick={() => handleOpenModal('smsTemplate', template)}
+                                >
                                   ✏️
                                 </button>
-                                <button className="btn-icon danger" title="Delete">
+                                <button 
+                                  className="btn-icon danger" 
+                                  title="Delete"
+                                  onClick={() => handleDelete('smsTemplate', template.id)}
+                                >
                                   🗑️
                                 </button>
                               </div>
@@ -470,7 +672,10 @@ export const CommunicationPage: React.FC = () => {
             <div className="channels-tab">
               <div className="tab-header">
                 <h2>Communication Channels</h2>
-                <button className="btn btn-primary">
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => handleOpenModal('channel')}
+                >
                   <span>➕</span> Add Channel
                 </button>
               </div>
@@ -510,7 +715,7 @@ export const CommunicationPage: React.FC = () => {
                           </td>
                           <td>
                             <div className="config-summary">
-                              {Object.keys(channel.configuration).length} setting(s)
+                              {Object.keys(channel.configuration || {}).length} setting(s)
                             </div>
                           </td>
                           <td>
@@ -540,10 +745,18 @@ export const CommunicationPage: React.FC = () => {
                               >
                                 🧪
                               </button>
-                              <button className="btn-icon" title="Edit">
+                              <button 
+                                className="btn-icon" 
+                                title="Edit"
+                                onClick={() => handleOpenModal('channel', channel)}
+                              >
                                 ✏️
                               </button>
-                              <button className="btn-icon danger" title="Delete">
+                              <button 
+                                className="btn-icon danger" 
+                                title="Delete"
+                                onClick={() => handleDelete('channel', channel.id)}
+                              >
                                 🗑️
                               </button>
                             </div>
@@ -562,14 +775,22 @@ export const CommunicationPage: React.FC = () => {
               <div className="tab-header">
                 <h2>Communication Logs</h2>
                 <div className="filters">
-                  <select className="form-select">
+                  <select 
+                    className="form-select"
+                    value={logChannelFilter}
+                    onChange={(e) => setLogChannelFilter(e.target.value)}
+                  >
                     <option value="">All Channels</option>
                     <option value="EMAIL">Email</option>
                     <option value="SMS">SMS</option>
                     <option value="PUSH">Push</option>
                     <option value="WHATSAPP">WhatsApp</option>
                   </select>
-                  <select className="form-select">
+                  <select 
+                    className="form-select"
+                    value={logStatusFilter}
+                    onChange={(e) => setLogStatusFilter(e.target.value)}
+                  >
                     <option value="">All Status</option>
                     <option value="SENT">Sent</option>
                     <option value="DELIVERED">Delivered</option>
@@ -622,7 +843,7 @@ export const CommunicationPage: React.FC = () => {
                             <div className="message-preview">
                               {log.subject && <div><strong>{log.subject}</strong></div>}
                               <div>
-                                {log.message.length > 50 
+                                {log.message?.length > 50 
                                   ? `${log.message.substring(0, 50)}...`
                                   : log.message
                                 }
@@ -658,7 +879,14 @@ export const CommunicationPage: React.FC = () => {
                                   🔄
                                 </button>
                               )}
-                              <button className="btn-icon" title="View Details">
+                              <button 
+                                className="btn-icon" 
+                                title="View Details"
+                                onClick={() => {
+                                  setDetailsData(log);
+                                  handleOpenModal('details');
+                                }}
+                              >
                                 👁️
                               </button>
                             </div>
@@ -676,7 +904,10 @@ export const CommunicationPage: React.FC = () => {
             <div className="bulk-tab">
               <div className="tab-header">
                 <h2>Bulk Communications</h2>
-                <button className="btn btn-primary">
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => handleOpenModal('bulk')}
+                >
                   <span>➕</span> Create Bulk Communication
                 </button>
               </div>
@@ -717,7 +948,7 @@ export const CommunicationPage: React.FC = () => {
                           </td>
                           <td>
                             <div className="channels-list">
-                              {bulk.channels.map((channel, index) => (
+                              {bulk.channels?.map((channel, index) => (
                                 <span key={index} className="channel-badge">
                                   {getChannelIcon(channel)} {channel}
                                 </span>
@@ -748,17 +979,36 @@ export const CommunicationPage: React.FC = () => {
                           <td>
                             <div className="action-buttons">
                               {bulk.status === 'DRAFT' && (
-                                <button className="btn-icon" title="Send Now">
+                                <button 
+                                  className="btn-icon" 
+                                  title="Send Now"
+                                  onClick={() => handleSendBulk(bulk.id)}
+                                >
                                   ▶️
                                 </button>
                               )}
-                              <button className="btn-icon" title="View Details">
+                              <button 
+                                className="btn-icon" 
+                                title="View Details"
+                                onClick={() => {
+                                  setDetailsData(bulk);
+                                  handleOpenModal('details');
+                                }}
+                              >
                                 👁️
                               </button>
-                              <button className="btn-icon" title="Edit">
+                              <button 
+                                className="btn-icon" 
+                                title="Edit"
+                                onClick={() => handleOpenModal('bulk', bulk)}
+                              >
                                 ✏️
                               </button>
-                              <button className="btn-icon danger" title="Delete">
+                              <button 
+                                className="btn-icon danger" 
+                                title="Delete"
+                                onClick={() => handleDelete('bulk', bulk.id)}
+                              >
                                 🗑️
                               </button>
                             </div>
@@ -776,7 +1026,10 @@ export const CommunicationPage: React.FC = () => {
             <div className="preferences-tab">
               <div className="tab-header">
                 <h2>Notification Preferences</h2>
-                <button className="btn btn-primary">
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => handleOpenModal('preference')}
+                >
                   <span>➕</span> Add Preference Rule
                 </button>
               </div>
@@ -812,7 +1065,7 @@ export const CommunicationPage: React.FC = () => {
                           </td>
                           <td>
                             <div className="channels-list">
-                              {pref.channels.map((channel, index) => (
+                              {pref.channels?.map((channel, index) => (
                                 <span key={index} className="channel-badge">
                                   {getChannelIcon(channel)} {channel}
                                 </span>
@@ -823,7 +1076,7 @@ export const CommunicationPage: React.FC = () => {
                             <span className="status-badge gray">{pref.frequency}</span>
                           </td>
                           <td>
-                            {pref.quietHours.enabled ? (
+                            {pref.quietHours?.enabled ? (
                               <span className="quiet-hours">
                                 {pref.quietHours.startTime} - {pref.quietHours.endTime}
                               </span>
@@ -838,11 +1091,12 @@ export const CommunicationPage: React.FC = () => {
                           </td>
                           <td>
                             <div className="action-buttons">
-                              <button className="btn-icon" title="Edit">
+                              <button 
+                                className="btn-icon" 
+                                title="Edit"
+                                onClick={() => handleOpenModal('preference', pref)}
+                              >
                                 ✏️
-                              </button>
-                              <button className="btn-icon danger" title="Delete">
-                                🗑️
                               </button>
                             </div>
                           </td>
@@ -855,6 +1109,446 @@ export const CommunicationPage: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Modals */}
+        {showModal && (
+          <div className="modal-overlay" onClick={handleCloseModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>
+                  {modalType === 'preview' && 'Preview'}
+                  {modalType === 'details' && 'Details'}
+                  {modalType === 'emailTemplate' && (editingItem ? 'Edit' : 'Add') + ' Email Template'}
+                  {modalType === 'smsTemplate' && (editingItem ? 'Edit' : 'Add') + ' SMS Template'}
+                  {modalType === 'channel' && (editingItem ? 'Edit' : 'Add') + ' Channel'}
+                  {modalType === 'bulk' && (editingItem ? 'Edit' : 'Create') + ' Bulk Communication'}
+                  {modalType === 'preference' && (editingItem ? 'Edit' : 'Add') + ' Preference'}
+                </h2>
+                <button className="modal-close" onClick={handleCloseModal}>✕</button>
+              </div>
+
+              {modalType === 'preview' && previewData && (
+                <div className="modal-body">
+                  {previewData.subject && <div><strong>Subject:</strong> {previewData.subject}</div>}
+                  <div><strong>Message:</strong></div>
+                  <div style={{ whiteSpace: 'pre-wrap', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '8px', marginTop: '0.5rem' }}>
+                    {previewData.body || previewData.message}
+                  </div>
+                </div>
+              )}
+
+              {modalType === 'details' && detailsData && (
+                <div className="modal-body">
+                  <pre style={{ whiteSpace: 'pre-wrap', fontSize: '0.875rem' }}>
+                    {JSON.stringify(detailsData, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {(modalType === 'emailTemplate' || modalType === 'smsTemplate' || modalType === 'channel' || modalType === 'bulk' || modalType === 'preference') && (
+                <form onSubmit={handleSubmit}>
+                  <div className="modal-body">
+                    {/* Email Template Form */}
+                    {modalType === 'emailTemplate' && (
+                      <>
+                        <div className="form-group">
+                          <label>Name *</label>
+                          <input
+                            type="text"
+                            value={formData.name || ''}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Template Type *</label>
+                          <select
+                            value={formData.templateType || 'CUSTOM'}
+                            onChange={(e) => setFormData({ ...formData, templateType: e.target.value })}
+                            required
+                          >
+                            <option value="INVOICE_DUE">Invoice Due</option>
+                            <option value="PAYMENT_RECEIVED">Payment Received</option>
+                            <option value="CONTRACT_EXPIRING">Contract Expiring</option>
+                            <option value="WELCOME">Welcome</option>
+                            <option value="MAINTENANCE_REQUEST">Maintenance Request</option>
+                            <option value="CUSTOM">Custom</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Subject *</label>
+                          <input
+                            type="text"
+                            value={formData.subject || ''}
+                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Body *</label>
+                          <textarea
+                            value={formData.body || ''}
+                            onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                            rows={8}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.active !== false}
+                              onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                            />
+                            Active
+                          </label>
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.isDefault || false}
+                              onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                            />
+                            Default Template
+                          </label>
+                        </div>
+                      </>
+                    )}
+
+                    {/* SMS Template Form */}
+                    {modalType === 'smsTemplate' && (
+                      <>
+                        <div className="form-group">
+                          <label>Name *</label>
+                          <input
+                            type="text"
+                            value={formData.name || ''}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Template Type *</label>
+                          <select
+                            value={formData.templateType || 'CUSTOM'}
+                            onChange={(e) => setFormData({ ...formData, templateType: e.target.value })}
+                            required
+                          >
+                            <option value="INVOICE_DUE">Invoice Due</option>
+                            <option value="PAYMENT_RECEIVED">Payment Received</option>
+                            <option value="CONTRACT_EXPIRING">Contract Expiring</option>
+                            <option value="REMINDER">Reminder</option>
+                            <option value="CUSTOM">Custom</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Message *</label>
+                          <textarea
+                            value={formData.message || ''}
+                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                            rows={4}
+                            maxLength={1600}
+                            required
+                          />
+                          <small>{formData.message?.length || 0}/1600 characters</small>
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.active !== false}
+                              onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                            />
+                            Active
+                          </label>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Channel Form */}
+                    {modalType === 'channel' && (
+                      <>
+                        <div className="form-group">
+                          <label>Name *</label>
+                          <input
+                            type="text"
+                            value={formData.name || ''}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Type *</label>
+                          <select
+                            value={formData.type || 'EMAIL'}
+                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                            required
+                          >
+                            <option value="EMAIL">Email</option>
+                            <option value="SMS">SMS</option>
+                            <option value="PUSH">Push Notification</option>
+                            <option value="WHATSAPP">WhatsApp</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Configuration (JSON)</label>
+                          <textarea
+                            value={JSON.stringify(formData.configuration || {}, null, 2)}
+                            onChange={(e) => {
+                              try {
+                                setFormData({ ...formData, configuration: JSON.parse(e.target.value) });
+                              } catch (err) {
+                                // Invalid JSON, keep as is
+                              }
+                            }}
+                            rows={6}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.active !== false}
+                              onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
+                            />
+                            Active
+                          </label>
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.isDefault || false}
+                              onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
+                            />
+                            Default Channel
+                          </label>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Bulk Communication Form */}
+                    {modalType === 'bulk' && (
+                      <>
+                        <div className="form-group">
+                          <label>Name *</label>
+                          <input
+                            type="text"
+                            value={formData.name || ''}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Recipient Type *</label>
+                          <select
+                            value={formData.recipientType || 'ALL_TENANTS'}
+                            onChange={(e) => setFormData({ ...formData, recipientType: e.target.value })}
+                            required
+                          >
+                            <option value="ALL_TENANTS">All Tenants</option>
+                            <option value="ACTIVE_TENANTS">Active Tenants</option>
+                            <option value="OVERDUE_TENANTS">Overdue Tenants</option>
+                            <option value="EXPIRING_CONTRACTS">Expiring Contracts</option>
+                            <option value="CUSTOM">Custom</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Channels *</label>
+                          <div>
+                            {['EMAIL', 'SMS', 'PUSH', 'WHATSAPP'].map(channel => (
+                              <label key={channel} style={{ display: 'block', marginBottom: '0.5rem' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={(formData.channels || []).includes(channel)}
+                                  onChange={(e) => {
+                                    const channels = formData.channels || [];
+                                    if (e.target.checked) {
+                                      setFormData({ ...formData, channels: [...channels, channel] });
+                                    } else {
+                                      setFormData({ ...formData, channels: channels.filter((c: string) => c !== channel) });
+                                    }
+                                  }}
+                                />
+                                {channel}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label>Message *</label>
+                          <textarea
+                            value={formData.message || ''}
+                            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                            rows={6}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Subject (for Email)</label>
+                          <input
+                            type="text"
+                            value={formData.subject || ''}
+                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Scheduled At (optional)</label>
+                          <input
+                            type="datetime-local"
+                            value={formData.scheduledAt || ''}
+                            onChange={(e) => setFormData({ ...formData, scheduledAt: e.target.value })}
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {/* Preference Form */}
+                    {modalType === 'preference' && (
+                      <>
+                        <div className="form-group">
+                          <label>User ID *</label>
+                          <input
+                            type="number"
+                            value={formData.userId || ''}
+                            onChange={(e) => setFormData({ ...formData, userId: parseInt(e.target.value) })}
+                            required
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Notification Type *</label>
+                          <select
+                            value={formData.notificationType || 'INVOICE_DUE'}
+                            onChange={(e) => setFormData({ ...formData, notificationType: e.target.value })}
+                            required
+                          >
+                            <option value="INVOICE_DUE">Invoice Due</option>
+                            <option value="PAYMENT_RECEIVED">Payment Received</option>
+                            <option value="CONTRACT_EXPIRING">Contract Expiring</option>
+                            <option value="MAINTENANCE_REQUEST">Maintenance Request</option>
+                            <option value="SYSTEM">System</option>
+                            <option value="MARKETING">Marketing</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>Channels *</label>
+                          <div>
+                            {['EMAIL', 'SMS', 'PUSH', 'WHATSAPP', 'IN_APP'].map(channel => (
+                              <label key={channel} style={{ display: 'block', marginBottom: '0.5rem' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={(formData.channels || []).includes(channel)}
+                                  onChange={(e) => {
+                                    const channels = formData.channels || [];
+                                    if (e.target.checked) {
+                                      setFormData({ ...formData, channels: [...channels, channel] });
+                                    } else {
+                                      setFormData({ ...formData, channels: channels.filter((c: string) => c !== channel) });
+                                    }
+                                  }}
+                                />
+                                {channel}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label>Frequency *</label>
+                          <select
+                            value={formData.frequency || 'IMMEDIATE'}
+                            onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                            required
+                          >
+                            <option value="IMMEDIATE">Immediate</option>
+                            <option value="DAILY_DIGEST">Daily Digest</option>
+                            <option value="WEEKLY_DIGEST">Weekly Digest</option>
+                            <option value="NEVER">Never</option>
+                          </select>
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.enabled !== false}
+                              onChange={(e) => setFormData({ ...formData, enabled: e.target.checked })}
+                            />
+                            Enabled
+                          </label>
+                        </div>
+                        <div className="form-group">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={formData.quietHours?.enabled || false}
+                              onChange={(e) => setFormData({ 
+                                ...formData, 
+                                quietHours: { 
+                                  ...formData.quietHours, 
+                                  enabled: e.target.checked 
+                                } 
+                              })}
+                            />
+                            Enable Quiet Hours
+                          </label>
+                        </div>
+                        {formData.quietHours?.enabled && (
+                          <>
+                            <div className="form-group">
+                              <label>Start Time</label>
+                              <input
+                                type="time"
+                                value={formData.quietHours?.startTime || '22:00'}
+                                onChange={(e) => setFormData({ 
+                                  ...formData, 
+                                  quietHours: { 
+                                    ...formData.quietHours, 
+                                    startTime: e.target.value 
+                                  } 
+                                })}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>End Time</label>
+                              <input
+                                type="time"
+                                value={formData.quietHours?.endTime || '08:00'}
+                                onChange={(e) => setFormData({ 
+                                  ...formData, 
+                                  quietHours: { 
+                                    ...formData.quietHours, 
+                                    endTime: e.target.value 
+                                  } 
+                                })}
+                              />
+                            </div>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  <div className="modal-actions">
+                    <button type="submit" className="btn btn-primary" disabled={loading}>
+                      {loading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {(modalType === 'preview' || modalType === 'details') && (
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </MainLayout>
   );
