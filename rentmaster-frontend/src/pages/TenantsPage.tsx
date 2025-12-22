@@ -1,27 +1,115 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { MainLayout } from '../components/MainLayout';
 import { tenantApi } from '../services/api/tenantApi';
 import { Tenant } from '../types';
 import './TenantsPage.css';
 
+type SortField = 'fullName' | 'phone' | 'email' | 'idNumber' | 'address';
+type SortDirection = 'asc' | 'desc';
+
 export const TenantsPage: React.FC = () => {
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [allTenants, setAllTenants] = useState<Tenant[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [formData, setFormData] = useState<any>({});
   const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortField, setSortField] = useState<SortField>('fullName');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   useEffect(() => {
     loadTenants();
   }, [search]);
 
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when search changes
+  }, [search]);
+
   const loadTenants = async () => {
     try {
       const data = await tenantApi.getAll(search || undefined);
-      setTenants(data);
+      setAllTenants(data);
     } catch (error) {
       console.error('Failed to load tenants:', error);
     }
+  };
+
+  // Filter and sort tenants
+  const filteredAndSortedTenants = useMemo(() => {
+    let filtered = [...allTenants];
+
+    // Apply search filter
+    if (search.trim()) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(tenant =>
+        tenant.fullName?.toLowerCase().includes(searchLower) ||
+        tenant.phone?.toLowerCase().includes(searchLower) ||
+        tenant.email?.toLowerCase().includes(searchLower) ||
+        tenant.idNumber?.toLowerCase().includes(searchLower) ||
+        tenant.address?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue: string = '';
+      let bValue: string = '';
+
+      switch (sortField) {
+        case 'fullName':
+          aValue = (a.fullName || '').toLowerCase();
+          bValue = (b.fullName || '').toLowerCase();
+          break;
+        case 'phone':
+          aValue = (a.phone || '').toLowerCase();
+          bValue = (b.phone || '').toLowerCase();
+          break;
+        case 'email':
+          aValue = (a.email || '').toLowerCase();
+          bValue = (b.email || '').toLowerCase();
+          break;
+        case 'idNumber':
+          aValue = (a.idNumber || '').toLowerCase();
+          bValue = (b.idNumber || '').toLowerCase();
+          break;
+        case 'address':
+          aValue = (a.address || '').toLowerCase();
+          bValue = (b.address || '').toLowerCase();
+          break;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [allTenants, search, sortField, sortDirection]);
+
+  // Paginate tenants
+  const paginatedTenants = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredAndSortedTenants.slice(startIndex, endIndex);
+  }, [filteredAndSortedTenants, currentPage, pageSize]);
+
+  const totalTenants = filteredAndSortedTenants.length;
+  const totalPages = Math.max(1, Math.ceil(totalTenants / pageSize));
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return '⇅';
+    return sortDirection === 'asc' ? '↑' : '↓';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,16 +177,41 @@ export const TenantsPage: React.FC = () => {
           <table className="data-table">
             <thead>
               <tr>
-                <th>Tenant</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>ID Number</th>
-                <th>Address</th>
+                <th 
+                  className="sortable" 
+                  onClick={() => handleSort('fullName')}
+                >
+                  Tenant {getSortIcon('fullName')}
+                </th>
+                <th 
+                  className="sortable" 
+                  onClick={() => handleSort('phone')}
+                >
+                  Phone {getSortIcon('phone')}
+                </th>
+                <th 
+                  className="sortable" 
+                  onClick={() => handleSort('email')}
+                >
+                  Email {getSortIcon('email')}
+                </th>
+                <th 
+                  className="sortable" 
+                  onClick={() => handleSort('idNumber')}
+                >
+                  ID Number {getSortIcon('idNumber')}
+                </th>
+                <th 
+                  className="sortable" 
+                  onClick={() => handleSort('address')}
+                >
+                  Address {getSortIcon('address')}
+                </th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {tenants.length === 0 ? (
+              {paginatedTenants.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="empty-state">
                     <div className="empty-state-content">
@@ -108,7 +221,7 @@ export const TenantsPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                tenants.map((tenant) => (
+                paginatedTenants.map((tenant) => (
                   <tr key={tenant.id}>
                     <td>
                       <div className="user-cell">
@@ -145,6 +258,56 @@ export const TenantsPage: React.FC = () => {
               )}
             </tbody>
           </table>
+
+          {/* Pagination footer */}
+          {totalTenants > 0 && (
+            <div className="table-footer">
+              <div className="table-footer-left">
+                <span>Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(parseInt(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+                <span>
+                  {totalTenants === 0
+                    ? '0–0 of 0'
+                    : `${(currentPage - 1) * pageSize + 1}–${Math.min(
+                        currentPage * pageSize,
+                        totalTenants
+                      )} of ${totalTenants}`}
+                </span>
+              </div>
+              <div className="table-footer-right">
+                <button
+                  className="btn-icon"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  title="Previous page"
+                >
+                  ◀
+                </button>
+                <span>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  className="btn-icon"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  title="Next page"
+                >
+                  ▶
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {showModal && (

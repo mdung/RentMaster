@@ -47,12 +47,15 @@ export const ContractsPage: React.FC = () => {
         tenantApi.getAll(),
         serviceApi.getAll(),
       ]);
+      console.log('Loaded contracts:', contractsData);
+      console.log('Contracts count:', contractsData.length);
       setContracts(contractsData);
       setProperties(propertiesData);
       setTenants(tenantsData);
       setServices(servicesData);
     } catch (error) {
       console.error('Failed to load data:', error);
+      console.error('Error details:', error);
     }
   };
 

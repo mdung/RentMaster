@@ -37,29 +37,46 @@ export interface MaintenanceSchedule {
   id: number;
   title: string;
   description: string;
-  category: string;
-  frequency: string;
+  maintenanceType: string;
+  recurrenceType: string;
+  recurrenceInterval?: number;
   nextDueDate: string;
-  lastCompletedDate?: string;
+  scheduledDate?: string;
+  completedDate?: string;
+  completedBy?: string;
   assignedVendor?: string;
+  vendorId?: number;
   estimatedCost?: number;
+  actualCost?: number;
   priority: string;
   status: string;
+  location?: string;
+  specialInstructions?: string;
 }
 
 export interface Vendor {
   id: number;
   name: string;
-  category: string;
-  contactPerson: string;
+  companyName?: string;
+  contactPerson?: string;
   phone: string;
+  mobile?: string;
   email: string;
   address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  website?: string;
+  specialties?: string[];
+  serviceAreas?: string[];
   rating: number;
   totalJobs: number;
   averageCost: number;
+  hourlyRate?: number;
   isPreferred: boolean;
-  active: boolean;
+  isActive: boolean;
+  notes?: string;
+  availability?: string;
 }
 
 export interface PropertyAnalytics {

@@ -1,47 +1,45 @@
-import axios from 'axios';
+import apiClient from './apiClient';
 
-const API_BASE_URL = 'http://localhost:8080/api';
-
-const localizationApi = {
+export const localizationApi = {
   // Language Management
   getSupportedLanguages: async () => {
-    const response = await axios.get(`${API_BASE_URL}/localization/languages`);
+    const response = await apiClient.get('/localization/languages');
     return response.data;
   },
 
   getLanguage: async (code: string) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/languages/${code}`);
+    const response = await apiClient.get(`/localization/languages/${code}`);
     return response.data;
   },
 
   createLanguage: async (language: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/languages`, language);
+    const response = await apiClient.post('/localization/languages', language);
     return response.data;
   },
 
   updateLanguage: async (id: number, language: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/languages/${id}`, language);
+    const response = await apiClient.put(`/localization/languages/${id}`, language);
     return response.data;
   },
 
   deleteLanguage: async (id: number) => {
-    const response = await axios.delete(`${API_BASE_URL}/localization/languages/${id}`);
+    const response = await apiClient.delete(`/localization/languages/${id}`);
     return response.data;
   },
 
   // Translation Management
   getTranslations: async (languageCode?: string, category?: string, key?: string) => {
-    const params = new URLSearchParams();
-    if (languageCode) params.append('languageCode', languageCode);
-    if (category) params.append('category', category);
-    if (key) params.append('key', key);
+    const params: any = {};
+    if (languageCode) params.languageCode = languageCode;
+    if (category) params.category = category;
+    if (key) params.key = key;
     
-    const response = await axios.get(`${API_BASE_URL}/localization/translations?${params}`);
+    const response = await apiClient.get('/localization/translations', { params });
     return response.data;
   },
 
   exportTranslations: async (languageCode: string, format: string = 'JSON') => {
-    const response = await axios.get(`${API_BASE_URL}/localization/translations/export`, {
+    const response = await apiClient.get('/localization/translations/export', {
       params: { languageCode, format },
       responseType: 'blob'
     });
@@ -58,121 +56,121 @@ const localizationApi = {
   },
 
   importTranslations: async (importData: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/translations/import`, importData);
+    const response = await apiClient.post('/localization/translations/import', importData);
     return response.data;
   },
 
   createTranslation: async (translation: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/translations`, translation);
+    const response = await apiClient.post('/localization/translations', translation);
     return response.data;
   },
 
   updateTranslation: async (id: number, translation: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/translations/${id}`, translation);
+    const response = await apiClient.put(`/localization/translations/${id}`, translation);
     return response.data;
   },
 
   deleteTranslation: async (id: number) => {
-    const response = await axios.delete(`${API_BASE_URL}/localization/translations/${id}`);
+    const response = await apiClient.delete(`/localization/translations/${id}`);
     return response.data;
   },
 
   bulkUpdateTranslations: async (translations: any[]) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/translations/bulk`, translations);
+    const response = await apiClient.post('/localization/translations/bulk', translations);
     return response.data;
   },
 
   // Locale Configuration
   getLocaleConfigurations: async () => {
-    const response = await axios.get(`${API_BASE_URL}/localization/locales`);
+    const response = await apiClient.get('/localization/locales');
     return response.data;
   },
 
   getLocaleConfiguration: async (code: string) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/locales/${code}`);
+    const response = await apiClient.get(`/localization/locales/${code}`);
     return response.data;
   },
 
   createLocaleConfiguration: async (localeConfig: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/locales`, localeConfig);
+    const response = await apiClient.post('/localization/locales', localeConfig);
     return response.data;
   },
 
   updateLocaleConfiguration: async (id: number, localeConfig: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/locales/${id}`, localeConfig);
+    const response = await apiClient.put(`/localization/locales/${id}`, localeConfig);
     return response.data;
   },
 
   // Currency Localization
   getCurrencyLocalizations: async () => {
-    const response = await axios.get(`${API_BASE_URL}/localization/currencies`);
+    const response = await apiClient.get('/localization/currencies');
     return response.data;
   },
 
   getCurrencyLocalization: async (code: string) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/currencies/${code}`);
+    const response = await apiClient.get(`/localization/currencies/${code}`);
     return response.data;
   },
 
   formatCurrency: async (formatRequest: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/currencies/format`, formatRequest);
+    const response = await apiClient.post('/localization/currencies/format', formatRequest);
     return response.data;
   },
 
   createCurrencyLocalization: async (currency: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/currencies`, currency);
+    const response = await apiClient.post('/localization/currencies', currency);
     return response.data;
   },
 
   updateCurrencyLocalization: async (id: number, currency: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/currencies/${id}`, currency);
+    const response = await apiClient.put(`/localization/currencies/${id}`, currency);
     return response.data;
   },
 
   // Date/Time Localization
   getDateTimeFormats: async () => {
-    const response = await axios.get(`${API_BASE_URL}/localization/datetime/formats`);
+    const response = await apiClient.get('/localization/datetime/formats');
     return response.data;
   },
 
   formatDateTime: async (formatRequest: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/datetime/format`, formatRequest);
+    const response = await apiClient.post('/localization/datetime/format', formatRequest);
     return response.data;
   },
 
   createDateTimeFormat: async (dateTimeFormat: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/datetime/formats`, dateTimeFormat);
+    const response = await apiClient.post('/localization/datetime/formats', dateTimeFormat);
     return response.data;
   },
 
   updateDateTimeFormat: async (id: number, dateTimeFormat: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/datetime/formats/${id}`, dateTimeFormat);
+    const response = await apiClient.put(`/localization/datetime/formats/${id}`, dateTimeFormat);
     return response.data;
   },
 
   // Regional Compliance
   getRegionalCompliance: async () => {
-    const response = await axios.get(`${API_BASE_URL}/localization/compliance`);
+    const response = await apiClient.get('/localization/compliance');
     return response.data;
   },
 
   getRegionalComplianceByCountry: async (countryCode: string) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/compliance/${countryCode}`);
+    const response = await apiClient.get(`/localization/compliance/${countryCode}`);
     return response.data;
   },
 
   createRegionalCompliance: async (compliance: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/compliance`, compliance);
+    const response = await apiClient.post('/localization/compliance', compliance);
     return response.data;
   },
 
   updateRegionalCompliance: async (id: number, compliance: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/compliance/${id}`, compliance);
+    const response = await apiClient.put(`/localization/compliance/${id}`, compliance);
     return response.data;
   },
 
   validateCompliance: async (countryCode: string, dataType: string, value: string) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/compliance/${countryCode}/validate`, {
+    const response = await apiClient.get(`/localization/compliance/${countryCode}/validate`, {
       params: { dataType, value }
     });
     return response.data;
@@ -180,78 +178,78 @@ const localizationApi = {
 
   // User Preferences
   getUserPreferences: async (userId: number) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/preferences/${userId}`);
+    const response = await apiClient.get(`/localization/preferences/${userId}`);
     return response.data;
   },
 
   createUserPreferences: async (preferences: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/preferences`, preferences);
+    const response = await apiClient.post('/localization/preferences', preferences);
     return response.data;
   },
 
   updateUserPreferences: async (userId: number, preferences: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/preferences/${userId}`, preferences);
+    const response = await apiClient.put(`/localization/preferences/${userId}`, preferences);
     return response.data;
   },
 
   // Translation Statistics
   getTranslationStatistics: async () => {
-    const response = await axios.get(`${API_BASE_URL}/localization/statistics`);
+    const response = await apiClient.get('/localization/statistics');
     return response.data;
   },
 
   getLanguageStatistics: async (languageCode: string) => {
-    const response = await axios.get(`${API_BASE_URL}/localization/statistics/${languageCode}`);
+    const response = await apiClient.get(`/localization/statistics/${languageCode}`);
     return response.data;
   },
 
   // Translation Validation
   validateTranslations: async (validationRequest: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/validate`, validationRequest);
+    const response = await apiClient.post('/localization/validate', validationRequest);
     return response.data;
   },
 
   autoTranslate: async (translateRequest: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/auto-translate`, translateRequest);
+    const response = await apiClient.post('/localization/auto-translate', translateRequest);
     return response.data;
   },
 
   // Localization Testing
   testLocalization: async (testRequest: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/test`, testRequest);
+    const response = await apiClient.post('/localization/test', testRequest);
     return response.data;
   },
 
   getMissingTranslations: async (languageCode: string, category?: string) => {
-    const params = new URLSearchParams({ languageCode });
-    if (category) params.append('category', category);
+    const params: any = { languageCode };
+    if (category) params.category = category;
     
-    const response = await axios.get(`${API_BASE_URL}/localization/missing-translations?${params}`);
+    const response = await apiClient.get('/localization/missing-translations', { params });
     return response.data;
   },
 
   // Content Localization
   localizeContent: async (contentRequest: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/content/localize`, contentRequest);
+    const response = await apiClient.post('/localization/content/localize', contentRequest);
     return response.data;
   },
 
   getLocalizedTemplates: async (languageCode?: string, templateType?: string) => {
-    const params = new URLSearchParams();
-    if (languageCode) params.append('languageCode', languageCode);
-    if (templateType) params.append('templateType', templateType);
+    const params: any = {};
+    if (languageCode) params.languageCode = languageCode;
+    if (templateType) params.templateType = templateType;
     
-    const response = await axios.get(`${API_BASE_URL}/localization/content/templates?${params}`);
+    const response = await apiClient.get('/localization/content/templates', { params });
     return response.data;
   },
 
   createLocalizedTemplate: async (template: any) => {
-    const response = await axios.post(`${API_BASE_URL}/localization/content/templates`, template);
+    const response = await apiClient.post('/localization/content/templates', template);
     return response.data;
   },
 
   updateLocalizedTemplate: async (id: number, template: any) => {
-    const response = await axios.put(`${API_BASE_URL}/localization/content/templates/${id}`, template);
+    const response = await apiClient.put(`/localization/content/templates/${id}`, template);
     return response.data;
   },
 
@@ -345,5 +343,3 @@ const localizationApi = {
     return localStorage.getItem('selectedLanguage') || localizationApi.detectUserLanguage();
   }
 };
-
-export { localizationApi };

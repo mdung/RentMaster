@@ -61,7 +61,7 @@ interface MaintenanceSchedule {
 interface Vendor {
   id: number;
   name: string;
-  contactPerson: string;
+  contactPerson?: string;
   phone: string;
   email: string;
   address: string;
@@ -95,7 +95,26 @@ export const PropertyManagementPage: React.FC = () => {
   const [formData, setFormData] = useState<any>({});
 
   useEffect(() => {
-    loadPropertyData();
+    loadProperties();
+    loadRooms();
+  }, [selectedProperty]);
+
+  useEffect(() => {
+    // Load tab-specific data when tab changes
+    if (activeTab === 'amenities') {
+      loadAmenities();
+    } else if (activeTab === 'images') {
+      loadImages();
+    } else if (activeTab === 'floor-plans') {
+      loadFloorPlans();
+    } else if (activeTab === 'maintenance') {
+      loadMaintenanceSchedules();
+    } else if (activeTab === 'vendors') {
+      loadVendors();
+    } else if (activeTab === 'overview') {
+      loadAmenities();
+      loadImages();
+    }
   }, [activeTab, selectedProperty]);
 
   const loadPropertyData = async () => {
@@ -229,22 +248,42 @@ export const PropertyManagementPage: React.FC = () => {
 
   const loadMaintenanceSchedules = async () => {
     try {
+      console.log('Loading maintenance schedules for property:', selectedProperty);
       const schedulesData = await propertyManagementApi.getMaintenanceSchedules(selectedProperty);
+      console.log('Maintenance schedules data received:', schedulesData);
+      
+      // Load vendors to get names for vendorId references
+      let vendorMap = new Map<number, string>();
+      try {
+        const vendorsData = await propertyManagementApi.getVendors();
+        vendorMap = new Map(vendorsData.map(v => [v.id, v.name]));
+        console.log('Vendors loaded for mapping:', vendorMap);
+      } catch (e) {
+        console.warn('Could not load vendors for maintenance schedules:', e);
+      }
+      
       // Map API response to component interface
-      const mappedSchedules: MaintenanceSchedule[] = schedulesData.map(s => ({
-        id: s.id,
-        propertyId: selectedProperty,
-        title: s.title,
-        description: s.description,
-        maintenanceType: s.category,
-        frequency: s.frequency,
-        nextDueDate: s.nextDueDate,
-        lastCompletedDate: s.lastCompletedDate,
-        assignedVendor: s.assignedVendor,
-        estimatedCost: s.estimatedCost || 0,
-        priority: s.priority,
-        isActive: s.status === 'ACTIVE'
-      }));
+      const mappedSchedules: MaintenanceSchedule[] = schedulesData.map(s => {
+        const vendorName = s.vendorId && vendorMap.has(s.vendorId) 
+          ? vendorMap.get(s.vendorId)! 
+          : (s.assignedVendor || (s.vendorId ? `Vendor #${s.vendorId}` : undefined));
+        
+        return {
+          id: s.id,
+          propertyId: selectedProperty,
+          title: s.title,
+          description: s.description || '',
+          maintenanceType: s.maintenanceType || 'GENERAL',
+          frequency: s.recurrenceType || 'MONTHLY',
+          nextDueDate: s.nextDueDate || s.scheduledDate || '',
+          lastCompletedDate: s.completedDate ? new Date(s.completedDate).toISOString().split('T')[0] : undefined,
+          assignedVendor: vendorName,
+          estimatedCost: s.estimatedCost || 0,
+          priority: s.priority || 'MEDIUM',
+          isActive: s.status !== 'COMPLETED' && s.status !== 'CANCELLED'
+        };
+      });
+      console.log('Mapped maintenance schedules:', mappedSchedules);
       setMaintenanceSchedules(mappedSchedules);
     } catch (error) {
       console.error('Failed to load maintenance schedules:', error);
@@ -254,20 +293,24 @@ export const PropertyManagementPage: React.FC = () => {
 
   const loadVendors = async () => {
     try {
+      console.log('Loading vendors...');
       const vendorsData = await propertyManagementApi.getVendors();
+      console.log('Vendors data received:', vendorsData);
+      
       // Map API response to component interface
       const mappedVendors: Vendor[] = vendorsData.map(v => ({
         id: v.id,
         name: v.name,
-        contactPerson: v.contactPerson,
-        phone: v.phone,
-        email: v.email,
-        address: v.address || '',
-        serviceTypes: [v.category],
-        rating: v.rating,
-        isActive: v.active,
-        notes: ''
+        contactPerson: v.contactPerson || v.companyName || 'N/A',
+        phone: v.phone || v.mobile || 'N/A',
+        email: v.email || '',
+        address: v.address || (v.city && v.state ? `${v.city}, ${v.state}` : '') || '',
+        serviceTypes: v.specialties && v.specialties.length > 0 ? v.specialties : ['GENERAL'],
+        rating: v.rating || 0,
+        isActive: v.isActive !== false,
+        notes: v.notes || ''
       }));
+      console.log('Mapped vendors:', mappedVendors);
       setVendors(mappedVendors);
     } catch (error) {
       console.error('Failed to load vendors:', error);
@@ -739,34 +782,41 @@ const MaintenanceTab: React.FC<{ schedules: MaintenanceSchedule[]; onRefresh: ()
       </div>
 
       <div className="schedules-list">
-        {schedules.map(schedule => (
-          <div key={schedule.id} className="schedule-card">
-            <div className="schedule-header">
-              <h4>{schedule.title}</h4>
-              <div className={`priority-badge ${schedule.priority.toLowerCase()}`}>
-                {schedule.priority}
-              </div>
-            </div>
-            <div className="schedule-details">
-              <p className="schedule-description">{schedule.description}</p>
-              <div className="schedule-info">
-                <p><strong>Type:</strong> {schedule.maintenanceType}</p>
-                <p><strong>Frequency:</strong> {schedule.frequency}</p>
-                <p><strong>Next Due:</strong> {new Date(schedule.nextDueDate).toLocaleDateString()}</p>
-                <p><strong>Last Completed:</strong> {schedule.lastCompletedDate ? new Date(schedule.lastCompletedDate).toLocaleDateString() : 'Never'}</p>
-                <p><strong>Assigned Vendor:</strong> {schedule.assignedVendor || 'Not assigned'}</p>
-                <p><strong>Estimated Cost:</strong> ${schedule.estimatedCost.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className="schedule-actions">
-              <button className="complete-button">Mark Complete</button>
-              <button className="edit-button">Edit</button>
-              <button className="toggle-button">
-                {schedule.isActive ? 'Deactivate' : 'Activate'}
-              </button>
-            </div>
+        {schedules.length === 0 ? (
+          <div className="empty-state" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No maintenance schedules found</p>
+            <p style={{ fontSize: '0.9rem' }}>Click "Add Schedule" to create a new maintenance schedule</p>
           </div>
-        ))}
+        ) : (
+          schedules.map(schedule => (
+            <div key={schedule.id} className="schedule-card">
+              <div className="schedule-header">
+                <h4>{schedule.title}</h4>
+                <div className={`priority-badge ${schedule.priority.toLowerCase()}`}>
+                  {schedule.priority}
+                </div>
+              </div>
+              <div className="schedule-details">
+                <p className="schedule-description">{schedule.description}</p>
+                <div className="schedule-info">
+                  <p><strong>Type:</strong> {schedule.maintenanceType}</p>
+                  <p><strong>Frequency:</strong> {schedule.frequency}</p>
+                  <p><strong>Next Due:</strong> {schedule.nextDueDate ? new Date(schedule.nextDueDate).toLocaleDateString() : 'Not scheduled'}</p>
+                  <p><strong>Last Completed:</strong> {schedule.lastCompletedDate ? new Date(schedule.lastCompletedDate).toLocaleDateString() : 'Never'}</p>
+                  <p><strong>Assigned Vendor:</strong> {schedule.assignedVendor || 'Not assigned'}</p>
+                  <p><strong>Estimated Cost:</strong> ${schedule.estimatedCost.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="schedule-actions">
+                <button className="complete-button">Mark Complete</button>
+                <button className="edit-button">Edit</button>
+                <button className="toggle-button">
+                  {schedule.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
@@ -785,48 +835,57 @@ const VendorsTab: React.FC<{ vendors: Vendor[]; onRefresh: () => void; onAdd: ()
       </div>
 
       <div className="vendors-grid">
-        {vendors.map(vendor => (
-          <div key={vendor.id} className="vendor-card">
-            <div className="vendor-header">
-              <h4>{vendor.name}</h4>
-              <div className="vendor-rating">
-                <span className="rating-stars">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <i 
-                      key={i} 
-                      className={`fas fa-star ${i < Math.floor(vendor.rating) ? 'filled' : ''}`}
-                    ></i>
-                  ))}
-                </span>
-                <span className="rating-value">{vendor.rating}</span>
-              </div>
-            </div>
-            <div className="vendor-details">
-              <p><strong>Contact:</strong> {vendor.contactPerson}</p>
-              <p><strong>Phone:</strong> {vendor.phone}</p>
-              <p><strong>Email:</strong> {vendor.email}</p>
-              <p><strong>Address:</strong> {vendor.address}</p>
-              <div className="service-types">
-                <strong>Services:</strong>
-                <div className="service-tags">
-                  {vendor.serviceTypes.map((service, index) => (
-                    <span key={index} className="service-tag">{service}</span>
-                  ))}
+        {vendors.length === 0 ? (
+          <div className="empty-state" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)', gridColumn: '1 / -1' }}>
+            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No vendors found</p>
+            <p style={{ fontSize: '0.9rem' }}>Click "Add Vendor" to add a new vendor or service provider</p>
+          </div>
+        ) : (
+          vendors.map(vendor => (
+            <div key={vendor.id} className="vendor-card">
+              <div className="vendor-header">
+                <h4>{vendor.name}</h4>
+                <div className="vendor-rating">
+                  <span className="rating-stars">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <i 
+                        key={i} 
+                        className={`fas fa-star ${i < Math.floor(vendor.rating || 0) ? 'filled' : ''}`}
+                      ></i>
+                    ))}
+                  </span>
+                  <span className="rating-value">{vendor.rating ? vendor.rating.toFixed(1) : '0.0'}</span>
                 </div>
               </div>
-              {vendor.notes && (
-                <p className="vendor-notes"><strong>Notes:</strong> {vendor.notes}</p>
-              )}
+              <div className="vendor-details">
+                {vendor.contactPerson && <p><strong>Contact:</strong> {vendor.contactPerson}</p>}
+                {vendor.phone && <p><strong>Phone:</strong> {vendor.phone}</p>}
+                {vendor.email && <p><strong>Email:</strong> {vendor.email}</p>}
+                {vendor.address && <p><strong>Address:</strong> {vendor.address}</p>}
+                {vendor.serviceTypes && vendor.serviceTypes.length > 0 && (
+                  <div className="service-types">
+                    <strong>Services:</strong>
+                    <div className="service-tags">
+                      {vendor.serviceTypes.map((service, index) => (
+                        <span key={index} className="service-tag">{service}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {vendor.notes && (
+                  <p className="vendor-notes"><strong>Notes:</strong> {vendor.notes}</p>
+                )}
+              </div>
+              <div className="vendor-actions">
+                <button className="contact-button">Contact</button>
+                <button className="edit-button">Edit</button>
+                <button className="toggle-button">
+                  {vendor.isActive ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
             </div>
-            <div className="vendor-actions">
-              <button className="contact-button">Contact</button>
-              <button className="edit-button">Edit</button>
-              <button className="toggle-button">
-                {vendor.isActive ? 'Deactivate' : 'Activate'}
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

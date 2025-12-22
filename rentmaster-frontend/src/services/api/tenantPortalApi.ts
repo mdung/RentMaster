@@ -1,35 +1,38 @@
 import apiClient from './apiClient';
-import {
-  TenantProfile,
-  TenantDashboard,
-  TenantContract,
-  TenantInvoice,
-  TenantPayment,
-  TenantPaymentMethod,
-  TenantMaintenanceRequest,
-  TenantDocument,
-  TenantNotification,
-  PaymentGateway,
-  PaymentIntent,
-  TenantFeedback,
-  TenantAnnouncement,
-} from '../../types';
 
-export interface TenantProfileUpdateData {
+export interface TenantDashboard {
+  profile: TenantProfile;
+  currentContract: TenantContract;
+  upcomingPayments: TenantInvoice[];
+  recentPayments: PaymentHistory[];
+  maintenanceRequests: MaintenanceRequest[];
+  documents: TenantDocument[];
+  notifications: TenantNotification[];
+  paymentMethods: PaymentMethod[];
+  stats: TenantStats;
+}
+
+export interface TenantProfile {
+  id: number;
+  userId: number;
   fullName: string;
   email: string;
-  phone?: string;
+  phone: string;
+  idNumber: string;
   dateOfBirth?: string;
-  address?: string;
+  address: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   emergencyContactRelation?: string;
   occupation?: string;
   employer?: string;
   monthlyIncome?: number;
-  preferredLanguage: string;
-  timezone: string;
-  notificationPreferences: {
+  profilePicture?: string;
+  preferredLanguage?: string;
+  timezone?: string;
+  createdAt: string;
+  updatedAt: string;
+  notificationPreferences?: {
     emailNotifications: boolean;
     smsNotifications: boolean;
     pushNotifications: boolean;
@@ -42,341 +45,264 @@ export interface TenantProfileUpdateData {
   };
 }
 
-export interface MaintenanceRequestCreateData {
+export interface TenantContract {
+  id: number;
+  contractCode: string;
+  property: {
+    id: number;
+    name: string;
+    address: string;
+  };
+  room: {
+    id: number;
+    code: string;
+    floor: string;
+    type: string;
+  };
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  securityDeposit: number;
+  status: string;
+  renewalEligible: boolean;
+  daysUntilExpiry: number;
+  autoRenewal: boolean;
+  nextRentDue: string;
+  totalPaid: number;
+  totalOutstanding: number;
+}
+
+export interface TenantInvoice {
+  id: number;
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate: string;
+  periodStart: string;
+  periodEnd: string;
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  status: string;
+  canPay: boolean;
+  lateFee?: number;
+  daysOverdue?: number;
+  items?: InvoiceItem[];
+  paymentHistory?: PaymentHistory[];
+}
+
+export interface InvoiceItem {
+  id: number;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  type: string;
+  period?: string;
+}
+
+export interface PaymentHistory {
+  id: number;
+  invoiceId?: number;
+  invoiceNumber?: string;
+  amount: number;
+  paymentDate: string;
+  paymentMethod: string;
+  transactionId?: string;
+  status: string;
+  description?: string;
+  receiptUrl?: string;
+  processingFee?: number;
+}
+
+export interface MaintenanceRequest {
+  id: number;
   title: string;
   description: string;
-  category: 'PLUMBING' | 'ELECTRICAL' | 'HVAC' | 'APPLIANCES' | 'STRUCTURAL' | 'CLEANING' | 'PEST_CONTROL' | 'OTHER';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  category: string;
+  priority: string;
+  status: string;
   location: string;
   preferredTime?: string;
   allowEntry: boolean;
-  photos: string[];
+  photos?: string[];
+  submittedAt: string;
+  acknowledgedAt?: string;
+  assignedTechnician?: string;
+  technicianPhone?: string;
+  completedAt?: string;
+  actualCost?: number;
+  workDescription?: string;
+  tenantRating?: number;
+  tenantFeedback?: string;
+  updates?: MaintenanceUpdate[];
 }
 
-export interface PaymentMethodCreateData {
-  type: 'CREDIT_CARD' | 'DEBIT_CARD' | 'BANK_ACCOUNT' | 'DIGITAL_WALLET';
+export interface MaintenanceUpdate {
+  id: number;
+  message: string;
+  type: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface TenantDocument {
+  id: number;
+  name: string;
+  type: string;
+  description?: string;
+  fileSize: number;
+  uploadDate: string;
+  downloadUrl: string;
+  isImportant: boolean;
+  requiresAction: boolean;
+  category: string;
+}
+
+export interface TenantNotification {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  priority: string;
+  read: boolean;
+  actionRequired: boolean;
+  actionUrl?: string;
+  actionText?: string;
+  createdAt: string;
+  readAt?: string;
+  relatedEntityId?: number;
+  relatedEntityType?: string;
+}
+
+export interface PaymentMethod {
+  id: number;
+  type: string;
   name: string;
   lastFour: string;
   expiryDate?: string;
-  provider: string;
   isDefault: boolean;
+  isActive: boolean;
+  provider: string;
+  createdAt: string;
 }
 
-export interface PaymentCreateData {
-  invoiceId: number;
-  amount: number;
-  paymentMethodId: number;
-  description?: string;
-}
-
-export interface FeedbackCreateData {
-  type: 'MAINTENANCE' | 'PAYMENT' | 'GENERAL' | 'SUGGESTION' | 'COMPLAINT';
-  subject: string;
-  message: string;
-  rating?: number;
-  category?: string;
-  attachments: string[];
+export interface TenantStats {
+  totalPaid: number;
+  totalOutstanding: number;
+  onTimePayments: number;
+  latePayments: number;
+  averagePaymentTime: number;
+  contractDuration: number;
+  maintenanceRequests: number;
+  resolvedRequests: number;
+  averageResolutionTime: number;
+  paymentHistory?: Array<{
+    month: string;
+    amount: number;
+    onTime: boolean;
+  }>;
 }
 
 export const tenantPortalApi = {
-  // Dashboard
-  getTenantDashboard: async (): Promise<TenantDashboard> => {
-    const response = await apiClient.get<TenantDashboard>('/tenant-portal/dashboard');
+  getDashboard: async (tenantId?: number): Promise<TenantDashboard> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get<TenantDashboard>('/tenant-portal/dashboard', { params });
     return response.data;
   },
 
-  // Profile Management
-  getTenantProfile: async (): Promise<TenantProfile> => {
-    const response = await apiClient.get<TenantProfile>('/tenant-portal/profile');
+  getProfile: async (tenantId?: number): Promise<TenantProfile> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get<TenantProfile>('/tenant-portal/profile', { params });
     return response.data;
   },
 
-  updateTenantProfile: async (data: TenantProfileUpdateData): Promise<TenantProfile> => {
-    const response = await apiClient.put<TenantProfile>('/tenant-portal/profile', data);
+  updateProfile: async (tenantId: number | undefined, profileData: Partial<TenantProfile>): Promise<TenantProfile> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.put<TenantProfile>('/tenant-portal/profile', profileData, { params });
     return response.data;
   },
 
-  uploadProfilePicture: async (file: File): Promise<TenantProfile> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await apiClient.post<TenantProfile>('/tenant-portal/profile/picture', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+  getContract: async (tenantId?: number): Promise<TenantContract> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get<TenantContract>('/tenant-portal/contract', { params });
+    return response.data;
+  },
+
+  getInvoices: async (tenantId?: number, status: string = 'PENDING', limit: number = 10): Promise<TenantInvoice[]> => {
+    const params: any = { status, limit };
+    if (tenantId) params.tenantId = tenantId;
+    const response = await apiClient.get<TenantInvoice[]>('/tenant-portal/invoices', { params });
+    return response.data;
+  },
+
+  getPaymentHistory: async (tenantId?: number, limit: number = 10): Promise<PaymentHistory[]> => {
+    const params: any = { limit };
+    if (tenantId) params.tenantId = tenantId;
+    const response = await apiClient.get<PaymentHistory[]>('/tenant-portal/payments', { params });
+    return response.data;
+  },
+
+  getMaintenanceRequests: async (tenantId?: number, limit: number = 10): Promise<MaintenanceRequest[]> => {
+    const params: any = { limit };
+    if (tenantId) params.tenantId = tenantId;
+    const response = await apiClient.get<MaintenanceRequest[]>('/tenant-portal/maintenance-requests', { params });
+    return response.data;
+  },
+
+  submitMaintenanceRequest: async (tenantId: number | undefined, requestData: any): Promise<MaintenanceRequest> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.post<MaintenanceRequest>('/tenant-portal/maintenance-requests', requestData, { params });
+    return response.data;
+  },
+
+  getDocuments: async (tenantId?: number): Promise<TenantDocument[]> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get<TenantDocument[]>('/tenant-portal/documents', { params });
+    return response.data;
+  },
+
+  downloadDocument: async (documentId: number, tenantId?: number): Promise<Blob> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get(`/tenant-portal/documents/${documentId}/download`, { 
+      params,
+      responseType: 'blob'
     });
     return response.data;
   },
 
-  // Contract Information
-  getCurrentContract: async (): Promise<TenantContract> => {
-    const response = await apiClient.get<TenantContract>('/tenant-portal/contract');
+  getNotifications: async (tenantId?: number, unreadOnly: boolean = false, limit: number = 20): Promise<TenantNotification[]> => {
+    const params: any = { unreadOnly, limit };
+    if (tenantId) params.tenantId = tenantId;
+    const response = await apiClient.get<TenantNotification[]>('/tenant-portal/notifications', { params });
     return response.data;
   },
 
-  requestContractRenewal: async (data: {
-    extensionMonths: number;
-    message?: string;
-  }): Promise<void> => {
-    await apiClient.post('/tenant-portal/contract/renewal-request', data);
+  markNotificationAsRead: async (notificationId: number, tenantId?: number): Promise<void> => {
+    const params = tenantId ? { tenantId } : {};
+    await apiClient.put(`/tenant-portal/notifications/${notificationId}/read`, {}, { params });
   },
 
-  // Invoices and Payments
-  getTenantInvoices: async (params?: {
-    page?: number;
-    size?: number;
-    status?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  }): Promise<{ content: TenantInvoice[]; totalElements: number; totalPages: number }> => {
-    const response = await apiClient.get('/tenant-portal/invoices', { params });
+  getStats: async (tenantId?: number): Promise<TenantStats> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get<TenantStats>('/tenant-portal/stats', { params });
     return response.data;
   },
 
-  getTenantInvoiceById: async (id: number): Promise<TenantInvoice> => {
-    const response = await apiClient.get<TenantInvoice>(`/tenant-portal/invoices/${id}`);
+  getPaymentMethods: async (tenantId?: number): Promise<PaymentMethod[]> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.get<PaymentMethod[]>('/tenant-portal/payment-methods', { params });
     return response.data;
   },
 
-  downloadInvoice: async (id: number): Promise<Blob> => {
-    const response = await apiClient.get(`/tenant-portal/invoices/${id}/download`, {
-      responseType: 'blob',
-    });
+  addPaymentMethod: async (tenantId: number | undefined, paymentMethodData: any): Promise<PaymentMethod> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.post<PaymentMethod>('/tenant-portal/payment-methods', paymentMethodData, { params });
     return response.data;
   },
 
-  getTenantPayments: async (params?: {
-    page?: number;
-    size?: number;
-    dateFrom?: string;
-    dateTo?: string;
-  }): Promise<{ content: TenantPayment[]; totalElements: number; totalPages: number }> => {
-    const response = await apiClient.get('/tenant-portal/payments', { params });
+  processPayment: async (tenantId: number | undefined, paymentData: any): Promise<PaymentHistory> => {
+    const params = tenantId ? { tenantId } : {};
+    const response = await apiClient.post<PaymentHistory>('/tenant-portal/payments', paymentData, { params });
     return response.data;
-  },
-
-  downloadPaymentReceipt: async (id: number): Promise<Blob> => {
-    const response = await apiClient.get(`/tenant-portal/payments/${id}/receipt`, {
-      responseType: 'blob',
-    });
-    return response.data;
-  },
-
-  // Payment Methods
-  getPaymentMethods: async (): Promise<TenantPaymentMethod[]> => {
-    const response = await apiClient.get<TenantPaymentMethod[]>('/tenant-portal/payment-methods');
-    return response.data;
-  },
-
-  addPaymentMethod: async (data: PaymentMethodCreateData): Promise<TenantPaymentMethod> => {
-    const response = await apiClient.post<TenantPaymentMethod>('/tenant-portal/payment-methods', data);
-    return response.data;
-  },
-
-  updatePaymentMethod: async (id: number, data: Partial<PaymentMethodCreateData>): Promise<TenantPaymentMethod> => {
-    const response = await apiClient.put<TenantPaymentMethod>(`/tenant-portal/payment-methods/${id}`, data);
-    return response.data;
-  },
-
-  deletePaymentMethod: async (id: number): Promise<void> => {
-    await apiClient.delete(`/tenant-portal/payment-methods/${id}`);
-  },
-
-  setDefaultPaymentMethod: async (id: number): Promise<void> => {
-    await apiClient.post(`/tenant-portal/payment-methods/${id}/set-default`);
-  },
-
-  // Online Payments
-  getPaymentGateways: async (): Promise<PaymentGateway[]> => {
-    const response = await apiClient.get<PaymentGateway[]>('/tenant-portal/payment-gateways');
-    return response.data;
-  },
-
-  createPaymentIntent: async (data: {
-    invoiceId: number;
-    amount: number;
-    paymentMethodId: number;
-    gatewayId: number;
-  }): Promise<PaymentIntent> => {
-    const response = await apiClient.post<PaymentIntent>('/tenant-portal/payments/create-intent', data);
-    return response.data;
-  },
-
-  confirmPayment: async (paymentIntentId: string): Promise<TenantPayment> => {
-    const response = await apiClient.post<TenantPayment>('/tenant-portal/payments/confirm', {
-      paymentIntentId
-    });
-    return response.data;
-  },
-
-  makePayment: async (data: PaymentCreateData): Promise<TenantPayment> => {
-    const response = await apiClient.post<TenantPayment>('/tenant-portal/payments', data);
-    return response.data;
-  },
-
-  // Maintenance Requests
-  getMaintenanceRequests: async (params?: {
-    page?: number;
-    size?: number;
-    status?: string;
-    category?: string;
-  }): Promise<{ content: TenantMaintenanceRequest[]; totalElements: number; totalPages: number }> => {
-    const response = await apiClient.get('/tenant-portal/maintenance-requests', { params });
-    return response.data;
-  },
-
-  getMaintenanceRequestById: async (id: number): Promise<TenantMaintenanceRequest> => {
-    const response = await apiClient.get<TenantMaintenanceRequest>(`/tenant-portal/maintenance-requests/${id}`);
-    return response.data;
-  },
-
-  createMaintenanceRequest: async (data: MaintenanceRequestCreateData): Promise<TenantMaintenanceRequest> => {
-    const response = await apiClient.post<TenantMaintenanceRequest>('/tenant-portal/maintenance-requests', data);
-    return response.data;
-  },
-
-  updateMaintenanceRequest: async (id: number, data: Partial<MaintenanceRequestCreateData>): Promise<TenantMaintenanceRequest> => {
-    const response = await apiClient.put<TenantMaintenanceRequest>(`/tenant-portal/maintenance-requests/${id}`, data);
-    return response.data;
-  },
-
-  cancelMaintenanceRequest: async (id: number, reason: string): Promise<TenantMaintenanceRequest> => {
-    const response = await apiClient.post<TenantMaintenanceRequest>(`/tenant-portal/maintenance-requests/${id}/cancel`, {
-      reason
-    });
-    return response.data;
-  },
-
-  rateMaintenanceRequest: async (id: number, rating: number, feedback?: string): Promise<TenantMaintenanceRequest> => {
-    const response = await apiClient.post<TenantMaintenanceRequest>(`/tenant-portal/maintenance-requests/${id}/rate`, {
-      rating,
-      feedback
-    });
-    return response.data;
-  },
-
-  uploadMaintenancePhoto: async (requestId: number, file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await apiClient.post<{ photoUrl: string }>(`/tenant-portal/maintenance-requests/${requestId}/photos`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data.photoUrl;
-  },
-
-  // Documents
-  getTenantDocuments: async (params?: {
-    page?: number;
-    size?: number;
-    type?: string;
-    category?: string;
-  }): Promise<{ content: TenantDocument[]; totalElements: number; totalPages: number }> => {
-    const response = await apiClient.get('/tenant-portal/documents', { params });
-    return response.data;
-  },
-
-  downloadTenantDocument: async (id: number): Promise<Blob> => {
-    const response = await apiClient.get(`/tenant-portal/documents/${id}/download`, {
-      responseType: 'blob',
-    });
-    return response.data;
-  },
-
-  // Notifications
-  getTenantNotifications: async (params?: {
-    page?: number;
-    size?: number;
-    type?: string;
-    read?: boolean;
-  }): Promise<{ content: TenantNotification[]; totalElements: number; totalPages: number }> => {
-    const response = await apiClient.get('/tenant-portal/notifications', { params });
-    return response.data;
-  },
-
-  markNotificationAsRead: async (id: number): Promise<TenantNotification> => {
-    const response = await apiClient.post<TenantNotification>(`/tenant-portal/notifications/${id}/read`);
-    return response.data;
-  },
-
-  markAllNotificationsAsRead: async (): Promise<void> => {
-    await apiClient.post('/tenant-portal/notifications/read-all');
-  },
-
-  deleteNotification: async (id: number): Promise<void> => {
-    await apiClient.delete(`/tenant-portal/notifications/${id}`);
-  },
-
-  // Feedback and Support
-  submitFeedback: async (data: FeedbackCreateData): Promise<TenantFeedback> => {
-    const response = await apiClient.post<TenantFeedback>('/tenant-portal/feedback', data);
-    return response.data;
-  },
-
-  getFeedbackHistory: async (): Promise<TenantFeedback[]> => {
-    const response = await apiClient.get<TenantFeedback[]>('/tenant-portal/feedback');
-    return response.data;
-  },
-
-  // Announcements
-  getAnnouncements: async (params?: {
-    page?: number;
-    size?: number;
-    type?: string;
-  }): Promise<{ content: TenantAnnouncement[]; totalElements: number; totalPages: number }> => {
-    const response = await apiClient.get('/tenant-portal/announcements', { params });
-    return response.data;
-  },
-
-  markAnnouncementAsRead: async (id: number): Promise<void> => {
-    await apiClient.post(`/tenant-portal/announcements/${id}/read`);
-  },
-
-  // Statistics
-  getTenantStats: async (): Promise<{
-    totalPaid: number;
-    totalOutstanding: number;
-    onTimePayments: number;
-    latePayments: number;
-    averagePaymentTime: number;
-    contractDuration: number;
-    maintenanceRequests: number;
-    resolvedRequests: number;
-    averageResolutionTime: number;
-    paymentHistory: {
-      month: string;
-      amount: number;
-      onTime: boolean;
-    }[];
-  }> => {
-    const response = await apiClient.get('/tenant-portal/stats');
-    return response.data;
-  },
-
-  // Utilities
-  uploadFile: async (file: File, type: 'PROFILE_PICTURE' | 'MAINTENANCE_PHOTO' | 'FEEDBACK_ATTACHMENT'): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', type);
-    
-    const response = await apiClient.post<{ fileUrl: string }>('/tenant-portal/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data.fileUrl;
-  },
-
-  // Emergency Contact
-  reportEmergency: async (data: {
-    type: 'FIRE' | 'FLOOD' | 'ELECTRICAL' | 'GAS_LEAK' | 'SECURITY' | 'MEDICAL' | 'OTHER';
-    description: string;
-    location: string;
-    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-    contactNumber: string;
-  }): Promise<void> => {
-    await apiClient.post('/tenant-portal/emergency', data);
   },
 };
