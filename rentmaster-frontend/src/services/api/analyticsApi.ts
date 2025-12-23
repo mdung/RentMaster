@@ -99,5 +99,34 @@ export const analyticsApi = {
       responseType: 'blob'
     });
     return response.data;
+  },
+
+  // Business Intelligence endpoints
+  getDashboardAnalytics: async (months: number = 12, propertyId?: number): Promise<any> => {
+    const params: any = { months };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get('/analytics/dashboard', { params });
+    return response.data;
+  },
+
+  getKPIMetrics: async (propertyId?: number, period: string = 'current_month'): Promise<any> => {
+    const params: any = { period };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get('/analytics/kpis', { params });
+    return response.data;
+  },
+
+  getTrendAnalysis: async (metric: string, months: number = 24, propertyId?: number): Promise<any> => {
+    const params: any = { metric, months };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get('/analytics/trends', { params });
+    return response.data;
+  },
+
+  getForecasting: async (forecastMonths: number = 12, propertyId?: number, metrics: string = 'revenue,occupancy,expenses'): Promise<any> => {
+    const params: any = { forecastMonths, metrics };
+    if (propertyId) params.propertyId = propertyId;
+    const response = await apiClient.get('/analytics/forecasting', { params });
+    return response.data;
   }
 };

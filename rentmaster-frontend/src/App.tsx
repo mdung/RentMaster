@@ -34,6 +34,8 @@ import { IntegrationPage } from './pages/IntegrationPage';
 import SearchPage from './pages/SearchPage';
 import { LocalizationPage } from './pages/LocalizationPage';
 import { MessagingPage } from './pages/MessagingPage';
+import { MaintenanceOperationsPage } from './pages/MaintenanceOperationsPage';
+import { BusinessIntelligencePage } from './pages/BusinessIntelligencePage';
 
 const PrivateRoute = ({ children }: { children: React.ReactElement }) => {
   const { isAuthenticated } = useAuth();
@@ -236,6 +238,14 @@ export const App = () => {
         }
       />
       <Route
+        path="/business-intelligence"
+        element={
+          <PrivateRoute>
+            <BusinessIntelligencePage />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/property-management"
         element={
           <PrivateRoute>
@@ -280,6 +290,14 @@ export const App = () => {
         element={
           <PrivateRoute>
             <MessagingPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/maintenance"
+        element={
+          <PrivateRoute>
+            <MaintenanceOperationsPage />
           </PrivateRoute>
         }
       />

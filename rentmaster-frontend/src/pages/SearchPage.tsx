@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import { MainLayout } from '../components/MainLayout';
 import { 
   Search, 
   Filter, 
@@ -7,17 +8,15 @@ import {
   Lightbulb, 
   BarChart3, 
   Settings, 
-  History,
-  Star,
-  Clock,
-  Target,
-  Zap,
   RefreshCw,
   Download,
   Share2,
-  BookOpen
+  Star,
+  Target,
+  Zap
 } from 'lucide-react';
 import './SearchPage.css';
+import './shared-styles.css';
 import { searchApi } from '../services/api/searchApi';
 
 interface SearchResult {
@@ -53,27 +52,50 @@ interface Recommendation {
   action?: string;
 }
 
+interface ModalState {
+  show: boolean;
+  title: string;
+  message: string;
+  type?: 'info' | 'success' | 'warning' | 'error';
+  details?: string;
+}
+
 const SearchPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'insights' | 'recommendations' | 'analytics' | 'config'>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [searchType, setSearchType] = useState('full-text');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [popularSearches, setPopularSearches] = useState<any[]>([]);
   const [searchTrends, setSearchTrends] = useState<any>({});
   const [searchConfig, setSearchConfig] = useState<any>({});
+  const [modal, setModal] = useState<ModalState>({ show: false, title: '', message: '', type: 'info' });
+
+  const showModal = (title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info', details?: string) => {
+    setModal({ show: true, title, message, type, details });
+  };
+
+  const hideModal = () => {
+    setModal({ show: false, title: '', message: '', type: 'info' });
+  };
 
   // Load initial data
   useEffect(() => {
     loadPopularSearches();
     loadSearchTrends();
     loadSearchConfig();
-    loadDashboardInsights();
-  }, []);
+    if (activeTab === 'insights') {
+      loadDashboardInsights();
+    }
+    if (activeTab === 'recommendations') {
+      loadRecommendations();
+    }
+  }, [activeTab]);
 
   // Auto-complete suggestions
   useEffect(() => {
@@ -90,94 +112,125 @@ const SearchPage: React.FC = () => {
   const loadPopularSearches = async () => {
     try {
       const data = await searchApi.getPopularSearches(7, 10);
-      setPopularSearches(data);
-    } catch (error) {
+      setPopularSearches(data || []);
+    } catch (error: any) {
       console.error('Failed to load popular searches:', error);
+      setPopularSearches([]);
     }
   };
 
   const loadSearchTrends = async () => {
     try {
       const data = await searchApi.getSearchTrends('week');
-      setSearchTrends(data);
-    } catch (error) {
+      setSearchTrends(data || {});
+    } catch (error: any) {
       console.error('Failed to load search trends:', error);
+      setSearchTrends({});
     }
   };
 
   const loadSearchConfig = async () => {
     try {
       const data = await searchApi.getSearchConfig();
-      setSearchConfig(data);
-    } catch (error) {
+      setSearchConfig(data || {
+        elasticsearchEnabled: true,
+        fuzzySearchEnabled: true,
+        autoCompleteEnabled: true,
+        searchAnalyticsEnabled: true,
+        maxResults: 20,
+        searchTimeout: 5
+      });
+    } catch (error: any) {
       console.error('Failed to load search config:', error);
+      setSearchConfig({
+        elasticsearchEnabled: true,
+        fuzzySearchEnabled: true,
+        autoCompleteEnabled: true,
+        searchAnalyticsEnabled: true,
+        maxResults: 20,
+        searchTimeout: 5
+      });
     }
   };
 
   const loadDashboardInsights = async () => {
     try {
-      const data = await searchApi.getDashboardInsights();
+      setLoading(true);
+      const data = await searchApi.getDashboardInsights(1);
       setInsights([
         {
           type: 'revenue',
           title: 'Revenue Growth Opportunity',
-          description: 'Market analysis suggests 8-12% rent increase potential for high-performing properties',
-          confidence: 0.87,
+          description: data.revenue?.message || 'Market analysis suggests 8-12% rent increase potential for high-performing properties',
+          confidence: data.revenue?.confidence || 0.87,
           data: data.revenue || {}
         },
         {
           type: 'occupancy',
           title: 'Occupancy Optimization',
-          description: 'Predictive models indicate optimal timing for preventive maintenance',
-          confidence: 0.82,
+          description: data.occupancy?.message || 'Predictive models indicate optimal timing for preventive maintenance',
+          confidence: data.occupancy?.confidence || 0.82,
           data: data.occupancy || {}
         },
         {
           type: 'maintenance',
           title: 'Maintenance Prediction',
-          description: 'HVAC systems require attention in the next 2-3 months',
-          confidence: 0.75,
+          description: data.maintenance?.message || 'HVAC systems require attention in the next 2-3 months',
+          confidence: data.maintenance?.confidence || 0.75,
           data: data.maintenance || {}
         }
       ]);
+    } catch (error: any) {
+      console.error('Failed to load insights:', error);
+      setInsights([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Load recommendations
+  const loadRecommendations = async () => {
+    try {
+      setLoading(true);
       const propertyRecs = await searchApi.getPropertyRecommendations(1, 5);
       const pricingRecs = await searchApi.getPricingRecommendations(1);
       
       setRecommendations([
-        ...propertyRecs.map((rec: any) => ({
-          id: rec.propertyId,
+        ...(propertyRecs || []).map((rec: any) => ({
+          id: rec.propertyId || rec.id,
           type: 'property',
-          title: rec.name,
-          description: `Match Score: ${rec.matchScore}% - ${rec.matchReasons?.join(', ')}`,
-          score: rec.matchScore,
+          title: rec.name || rec.title || 'Property Recommendation',
+          description: `Match Score: ${rec.matchScore || rec.score || 0}% - ${(rec.matchReasons || []).join(', ') || 'Recommended property'}`,
+          score: rec.matchScore || rec.score || 0,
           action: 'View Property'
         })),
         {
           id: 'pricing-1',
           type: 'pricing',
           title: 'Rent Optimization',
-          description: `Recommended rent: $${pricingRecs.recommendedRent} (${pricingRecs.adjustmentPercentage}% increase)`,
-          score: pricingRecs.confidence * 100,
+          description: `Recommended rent: $${pricingRecs?.recommendedRent || 0} (${pricingRecs?.adjustmentPercentage || 0}% increase)`,
+          score: (pricingRecs?.confidence || 0) * 100,
           action: 'Apply Pricing'
         }
       ]);
-    } catch (error) {
-      console.error('Failed to load insights:', error);
+    } catch (error: any) {
+      console.error('Failed to load recommendations:', error);
+      setRecommendations([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadSuggestions = async (query: string) => {
     try {
       const data = await searchApi.getSearchSuggestions(query, 5);
-      setSuggestions(data.map((item: any) => ({
-        text: item.text || item.query,
+      setSuggestions((data || []).map((item: any) => ({
+        text: item.text || item.query || item,
         score: item.score || 0,
         category: item.category || 'General'
       })));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load suggestions:', error);
+      setSuggestions([]);
     }
   };
 
@@ -185,6 +238,7 @@ const SearchPage: React.FC = () => {
     if (!searchQuery.trim()) return;
 
     setLoading(true);
+    setError(null);
     try {
       let results;
       
@@ -206,16 +260,21 @@ const SearchPage: React.FC = () => {
           results = await searchApi.fullTextSearch(searchQuery, 0, 20);
       }
 
-      setSearchResults(results.hits || []);
+      setSearchResults(results?.hits || results || []);
       
       // Track search for analytics
-      await searchApi.learnFromSearch({
-        query: searchQuery,
-        searchType,
-        userId: 1 // Replace with actual user ID
-      });
-    } catch (error) {
-      console.error('Search failed:', error);
+      try {
+        await searchApi.learnFromSearch({
+          query: searchQuery,
+          searchType,
+          userId: 1
+        });
+      } catch (e) {
+        // Ignore tracking errors
+      }
+    } catch (err: any) {
+      console.error('Search failed:', err);
+      setError(err.response?.data?.message || 'Search failed. Please try again.');
       setSearchResults([]);
     } finally {
       setLoading(false);
@@ -232,20 +291,33 @@ const SearchPage: React.FC = () => {
     try {
       setLoading(true);
       await searchApi.reindexData({ indexType: 'all', fullReindex: false });
-      alert('Data reindexing started successfully');
-    } catch (error) {
+      showModal('Success', 'Data reindexing started successfully. This process may take a few minutes to complete.', 'success');
+    } catch (error: any) {
       console.error('Reindexing failed:', error);
-      alert('Failed to start reindexing');
+      showModal('Error', 'Failed to start reindexing', 'error', error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await searchApi.exportSearchResults({
+        query: searchQuery,
+        searchType,
+        filters
+      }, 'CSV');
+      showModal('Success', 'Search results exported successfully!', 'success');
+    } catch (error: any) {
+      showModal('Export Failed', 'Failed to export search results', 'error', error.response?.data?.message || error.message);
+    }
+  };
+
   const renderSearchInterface = () => (
     <div className="search-interface">
-      <div className="search-header">
-        <h2>Advanced Search & AI</h2>
-        <p>Intelligent search with AI-powered insights and recommendations</p>
+      <div className="section-header">
+        <h3>Advanced Search & AI</h3>
+        <p className="section-subtitle">Intelligent search with AI-powered insights and recommendations</p>
       </div>
 
       <div className="search-controls">
@@ -253,7 +325,7 @@ const SearchPage: React.FC = () => {
           <select 
             value={searchType} 
             onChange={(e) => setSearchType(e.target.value)}
-            className="search-type-select"
+            className="form-select"
           >
             <option value="full-text">Full-Text Search</option>
             <option value="natural-language">Natural Language</option>
@@ -277,7 +349,7 @@ const SearchPage: React.FC = () => {
               }
               className="search-input"
             />
-            <button onClick={handleSearch} disabled={loading} className="search-button">
+            <button onClick={handleSearch} disabled={loading} className="btn btn-primary search-button">
               {loading ? <RefreshCw className="spinning" /> : <Search />}
             </button>
           </div>
@@ -306,35 +378,62 @@ const SearchPage: React.FC = () => {
               placeholder="Property Type"
               value={filters.type || ''}
               onChange={(e) => setFilters({...filters, type: e.target.value})}
-              className="filter-input"
+              className="form-input"
             />
             <input
               type="text"
               placeholder="Location"
               value={filters.location || ''}
               onChange={(e) => setFilters({...filters, location: e.target.value})}
-              className="filter-input"
+              className="form-input"
             />
             <input
               type="number"
               placeholder="Max Price"
               value={filters.maxPrice || ''}
               onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
-              className="filter-input"
+              className="form-input"
             />
           </div>
         )}
       </div>
 
+      {error && (
+        <div className="error-banner">
+          <span className="error-icon">⚠️</span>
+          <span className="error-text">{error}</span>
+          <button className="error-close" onClick={() => setError(null)}>×</button>
+        </div>
+      )}
+
       <div className="search-results">
         {searchResults.length > 0 && (
           <div className="results-header">
-            <h3>Search Results ({searchResults.length})</h3>
+            <h4>Search Results ({searchResults.length})</h4>
             <div className="results-actions">
-              <button className="action-button">
+              <button className="btn btn-secondary" onClick={handleExport}>
                 <Download /> Export
               </button>
-              <button className="action-button">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => {
+                  const shareText = `Search Results for "${searchQuery}"\n\nFound ${searchResults.length} results.`;
+                  if (navigator.share) {
+                    navigator.share({
+                      title: 'Search Results',
+                      text: shareText,
+                      url: window.location.href
+                    }).catch(err => console.log('Error sharing:', err));
+                  } else {
+                    // Fallback: copy to clipboard
+                    navigator.clipboard.writeText(shareText).then(() => {
+                      showModal('Success', 'Search results copied to clipboard!', 'success');
+                    }).catch(() => {
+                      showModal('Share Results', shareText, 'info');
+                    });
+                  }
+                }}
+              >
                 <Share2 /> Share
               </button>
             </div>
@@ -342,23 +441,37 @@ const SearchPage: React.FC = () => {
         )}
 
         <div className="results-list">
-          {searchResults.map((result) => (
-            <div key={result.id} className="result-item">
+          {searchResults.map((result, index) => (
+            <div 
+              key={result.id || index} 
+              className="result-item"
+              onClick={() => {
+                console.log('Result clicked:', result);
+                const typeLabel = result.type?.charAt(0).toUpperCase() + result.type?.slice(1) || 'Item';
+                showModal(
+                  `Viewing ${typeLabel}`,
+                  result.description || 'No description available',
+                  'info',
+                  `Title: ${result.title}\nType: ${result.type}\nScore: ${((result.score || 0) * 100).toFixed(1)}%`
+                );
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="result-header">
-                <h4 className="result-title">{result.title}</h4>
+                <h4 className="result-title">{result.title || 'Untitled'}</h4>
                 <div className="result-score">
                   <Star className="score-icon" />
-                  {(result.score * 100).toFixed(1)}%
+                  {((result.score || 0) * 100).toFixed(1)}%
                 </div>
               </div>
-              <p className="result-description">{result.description}</p>
+              <p className="result-description">{result.description || 'No description available'}</p>
               <div className="result-metadata">
-                <span className="result-type">{result.type}</span>
+                <span className="result-type">{result.type || 'Unknown'}</span>
                 {result.highlights && Object.keys(result.highlights).length > 0 && (
                   <div className="result-highlights">
                     {Object.entries(result.highlights).map(([field, highlights]) => (
                       <span key={field} className="highlight">
-                        <strong>{field}:</strong> {highlights.join(', ')}
+                        <strong>{field}:</strong> {Array.isArray(highlights) ? highlights.join(', ') : highlights}
                       </span>
                     ))}
                   </div>
@@ -369,10 +482,22 @@ const SearchPage: React.FC = () => {
         </div>
 
         {searchResults.length === 0 && searchQuery && !loading && (
-          <div className="no-results">
-            <Search className="no-results-icon" />
-            <h3>No results found</h3>
-            <p>Try adjusting your search terms or using different keywords</p>
+          <div className="empty-state">
+            <div className="empty-state-content">
+              <Search className="empty-icon" />
+              <h3>No results found</h3>
+              <p>Try adjusting your search terms or using different keywords</p>
+            </div>
+          </div>
+        )}
+
+        {!searchQuery && searchResults.length === 0 && (
+          <div className="empty-state">
+            <div className="empty-state-content">
+              <Search className="empty-icon" />
+              <h3>Start searching</h3>
+              <p>Enter a search query to find properties, tenants, payments, and more</p>
+            </div>
           </div>
         )}
       </div>
@@ -383,33 +508,74 @@ const SearchPage: React.FC = () => {
     <div className="insights-section">
       <div className="section-header">
         <h3><Brain className="section-icon" />AI-Powered Insights</h3>
-        <button onClick={loadDashboardInsights} className="refresh-button">
-          <RefreshCw />
+        <button onClick={loadDashboardInsights} className="btn btn-secondary refresh-button" disabled={loading}>
+          <RefreshCw className={loading ? 'spinning' : ''} />
         </button>
       </div>
 
-      <div className="insights-grid">
-        {insights.map((insight, index) => (
-          <div key={index} className="insight-card">
-            <div className="insight-header">
-              <div className="insight-icon">
-                {insight.type === 'revenue' && <TrendingUp />}
-                {insight.type === 'occupancy' && <BarChart3 />}
-                {insight.type === 'maintenance' && <Settings />}
-              </div>
-              <div className="insight-confidence">
-                {(insight.confidence * 100).toFixed(0)}%
-              </div>
-            </div>
-            <h4 className="insight-title">{insight.title}</h4>
-            <p className="insight-description">{insight.description}</p>
-            <div className="insight-actions">
-              <button className="insight-action">View Details</button>
-              <button className="insight-action secondary">Learn More</button>
-            </div>
+      {loading ? (
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading insights...</p>
+        </div>
+      ) : insights.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-content">
+            <Brain className="empty-icon" />
+            <h3>No insights available</h3>
+            <p>Insights will appear here once data is available</p>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="insights-grid">
+          {insights.map((insight, index) => (
+            <div key={index} className="insight-card">
+              <div className="insight-header">
+                <div className="insight-icon">
+                  {insight.type === 'revenue' && <TrendingUp />}
+                  {insight.type === 'occupancy' && <BarChart3 />}
+                  {insight.type === 'maintenance' && <Settings />}
+                </div>
+                <div className="insight-confidence">
+                  {((insight.confidence || 0) * 100).toFixed(0)}%
+                </div>
+              </div>
+              <h4 className="insight-title">{insight.title}</h4>
+              <p className="insight-description">{insight.description}</p>
+              <div className="insight-actions">
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => {
+                    console.log('View Details for insight:', insight);
+                    showModal(
+                      insight.title,
+                      insight.description,
+                      'info',
+                      `Confidence: ${((insight.confidence || 0) * 100).toFixed(0)}%\nType: ${insight.type}`
+                    );
+                  }}
+                >
+                  View Details
+                </button>
+                <button 
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    console.log('Learn More about insight:', insight);
+                    showModal(
+                      `About ${insight.title}`,
+                      'This insight is based on AI analysis of your property data. It uses machine learning algorithms to identify patterns and opportunities in your rental portfolio.',
+                      'info',
+                      `Insight Type: ${insight.type}\nConfidence Level: ${((insight.confidence || 0) * 100).toFixed(0)}%`
+                    );
+                  }}
+                >
+                  Learn More
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -417,29 +583,74 @@ const SearchPage: React.FC = () => {
     <div className="recommendations-section">
       <div className="section-header">
         <h3><Lightbulb className="section-icon" />Smart Recommendations</h3>
+        <button onClick={loadRecommendations} className="btn btn-secondary refresh-button" disabled={loading}>
+          <RefreshCw className={loading ? 'spinning' : ''} />
+        </button>
       </div>
 
-      <div className="recommendations-grid">
-        {recommendations.map((rec) => (
-          <div key={rec.id} className="recommendation-card">
-            <div className="recommendation-header">
-              <div className="recommendation-type">{rec.type}</div>
-              <div className="recommendation-score">
-                <Target className="score-icon" />
-                {rec.score.toFixed(1)}%
-              </div>
-            </div>
-            <h4 className="recommendation-title">{rec.title}</h4>
-            <p className="recommendation-description">{rec.description}</p>
-            {rec.action && (
-              <button className="recommendation-action">
-                <Zap className="action-icon" />
-                {rec.action}
-              </button>
-            )}
+      {loading ? (
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading recommendations...</p>
+        </div>
+      ) : recommendations.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-content">
+            <Lightbulb className="empty-icon" />
+            <h3>No recommendations available</h3>
+            <p>Recommendations will appear here once data is available</p>
           </div>
-        ))}
-      </div>
+        </div>
+      ) : (
+        <div className="recommendations-grid">
+          {recommendations.map((rec) => (
+            <div key={rec.id} className="recommendation-card">
+              <div className="recommendation-header">
+                <div className="recommendation-type">{rec.type}</div>
+                <div className="recommendation-score">
+                  <Target className="score-icon" />
+                  {(rec.score || 0).toFixed(1)}%
+                </div>
+              </div>
+              <h4 className="recommendation-title">{rec.title}</h4>
+              <p className="recommendation-description">{rec.description}</p>
+              {rec.action && (
+                <button 
+                  className="btn btn-primary recommendation-action"
+                  onClick={() => {
+                    console.log('Action clicked for recommendation:', rec);
+                    if (rec.type === 'property') {
+                      showModal(
+                        rec.title,
+                        rec.description,
+                        'info',
+                        `Match Score: ${rec.score.toFixed(1)}%\nType: Property Recommendation`
+                      );
+                    } else if (rec.type === 'pricing') {
+                      showModal(
+                        'Pricing Recommendation',
+                        rec.description,
+                        'success',
+                        `This pricing recommendation is based on market analysis and your property's performance metrics.`
+                      );
+                    } else {
+                      showModal(
+                        rec.action || 'Recommendation',
+                        rec.description,
+                        'info',
+                        `Title: ${rec.title}\nScore: ${rec.score.toFixed(1)}%`
+                      );
+                    }
+                  }}
+                >
+                  <Zap className="action-icon" />
+                  {rec.action}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -453,37 +664,49 @@ const SearchPage: React.FC = () => {
         <div className="analytics-card">
           <h4>Popular Searches</h4>
           <div className="popular-searches">
-            {popularSearches.map((search, index) => (
-              <div key={index} className="popular-search-item">
-                <span className="search-query">{search.query}</span>
-                <span className="search-count">{search.count}</span>
-                <span className="search-category">{search.category}</span>
-              </div>
-            ))}
+            {popularSearches.length === 0 ? (
+              <p className="no-data">No popular searches available</p>
+            ) : (
+              popularSearches.map((search, index) => (
+                <div key={index} className="popular-search-item">
+                  <span className="search-query">{search.query || search.text || 'Unknown'}</span>
+                  <span className="search-count">{search.count || 0}</span>
+                  <span className="search-category">{search.category || 'General'}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         <div className="analytics-card">
           <h4>Search Trends</h4>
           <div className="trends-data">
-            {searchTrends.trendingQueries?.map((trend: any, index: number) => (
-              <div key={index} className="trend-item">
-                <span className="trend-query">{trend.query}</span>
-                <span className="trend-growth">+{trend.growth?.toFixed(1)}%</span>
-              </div>
-            ))}
+            {searchTrends.trendingQueries && searchTrends.trendingQueries.length > 0 ? (
+              searchTrends.trendingQueries.map((trend: any, index: number) => (
+                <div key={index} className="trend-item">
+                  <span className="trend-query">{trend.query || trend.text || 'Unknown'}</span>
+                  <span className="trend-growth">+{(trend.growth || 0).toFixed(1)}%</span>
+                </div>
+              ))
+            ) : (
+              <p className="no-data">No trending searches available</p>
+            )}
           </div>
         </div>
 
         <div className="analytics-card">
           <h4>Search Categories</h4>
           <div className="categories-data">
-            {Object.entries(searchTrends.categories || {}).map(([category, count]) => (
-              <div key={category} className="category-item">
-                <span className="category-name">{category}</span>
-                <span className="category-count">{count as number}</span>
-              </div>
-            ))}
+            {searchTrends.categories && Object.keys(searchTrends.categories).length > 0 ? (
+              Object.entries(searchTrends.categories).map(([category, count]) => (
+                <div key={category} className="category-item">
+                  <span className="category-name">{category}</span>
+                  <span className="category-count">{count as number}</span>
+                </div>
+              ))
+            ) : (
+              <p className="no-data">No category data available</p>
+            )}
           </div>
         </div>
       </div>
@@ -503,7 +726,7 @@ const SearchPage: React.FC = () => {
             <label className="config-option">
               <input 
                 type="checkbox" 
-                checked={searchConfig.elasticsearchEnabled} 
+                checked={searchConfig.elasticsearchEnabled !== false} 
                 readOnly 
               />
               Elasticsearch Integration
@@ -511,7 +734,7 @@ const SearchPage: React.FC = () => {
             <label className="config-option">
               <input 
                 type="checkbox" 
-                checked={searchConfig.fuzzySearchEnabled} 
+                checked={searchConfig.fuzzySearchEnabled !== false} 
                 readOnly 
               />
               Fuzzy Search
@@ -519,7 +742,7 @@ const SearchPage: React.FC = () => {
             <label className="config-option">
               <input 
                 type="checkbox" 
-                checked={searchConfig.autoCompleteEnabled} 
+                checked={searchConfig.autoCompleteEnabled !== false} 
                 readOnly 
               />
               Auto-complete
@@ -527,7 +750,7 @@ const SearchPage: React.FC = () => {
             <label className="config-option">
               <input 
                 type="checkbox" 
-                checked={searchConfig.searchAnalyticsEnabled} 
+                checked={searchConfig.searchAnalyticsEnabled !== false} 
                 readOnly 
               />
               Search Analytics
@@ -539,10 +762,10 @@ const SearchPage: React.FC = () => {
           <h4>Performance Settings</h4>
           <div className="config-settings">
             <div className="setting-item">
-              <label>Max Results: {searchConfig.maxResults}</label>
+              <label>Max Results: {searchConfig.maxResults || 20}</label>
             </div>
             <div className="setting-item">
-              <label>Search Timeout: {searchConfig.searchTimeout}s</label>
+              <label>Search Timeout: {searchConfig.searchTimeout || 5}s</label>
             </div>
           </div>
         </div>
@@ -553,18 +776,41 @@ const SearchPage: React.FC = () => {
             <button 
               onClick={handleReindexData} 
               disabled={loading}
-              className="config-action-button"
+              className="btn btn-primary"
             >
               <RefreshCw className={loading ? 'spinning' : ''} />
               Reindex Data
             </button>
-            <button className="config-action-button">
+            <button 
+              className="btn btn-secondary" 
+              onClick={async () => {
+                try {
+                  // Export analytics data
+                  const analyticsData = {
+                    popularSearches,
+                    searchTrends,
+                    config: searchConfig
+                  };
+                  
+                  const dataStr = JSON.stringify(analyticsData, null, 2);
+                  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                  const url = URL.createObjectURL(dataBlob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `search-analytics-${new Date().toISOString().split('T')[0]}.json`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                  URL.revokeObjectURL(url);
+                  
+                  showModal('Success', 'Analytics data exported successfully!', 'success');
+                } catch (error: any) {
+                  showModal('Export Failed', 'Failed to export analytics data', 'error', error.message || 'Unknown error');
+                }
+              }}
+            >
               <Download />
               Export Analytics
-            </button>
-            <button className="config-action-button">
-              <BookOpen />
-              View Documentation
             </button>
           </div>
         </div>
@@ -573,53 +819,93 @@ const SearchPage: React.FC = () => {
   );
 
   return (
-    <div className="search-page">
-      <div className="search-tabs">
-        <button 
-          className={`tab ${activeTab === 'search' ? 'active' : ''}`}
-          onClick={() => setActiveTab('search')}
-        >
-          <Search className="tab-icon" />
-          Search
-        </button>
-        <button 
-          className={`tab ${activeTab === 'insights' ? 'active' : ''}`}
-          onClick={() => setActiveTab('insights')}
-        >
-          <Brain className="tab-icon" />
-          AI Insights
-        </button>
-        <button 
-          className={`tab ${activeTab === 'recommendations' ? 'active' : ''}`}
-          onClick={() => setActiveTab('recommendations')}
-        >
-          <Lightbulb className="tab-icon" />
-          Recommendations
-        </button>
-        <button 
-          className={`tab ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          <BarChart3 className="tab-icon" />
-          Analytics
-        </button>
-        <button 
-          className={`tab ${activeTab === 'config' ? 'active' : ''}`}
-          onClick={() => setActiveTab('config')}
-        >
-          <Settings className="tab-icon" />
-          Configuration
-        </button>
+    <MainLayout>
+      <div className="search-page">
+        <div className="page-header">
+          <div>
+            <h1>Advanced Search & AI</h1>
+            <p className="page-subtitle">Intelligent search with AI-powered insights and recommendations</p>
+          </div>
+        </div>
+
+        <div className="search-tabs">
+          <button 
+            className={`tab-button ${activeTab === 'search' ? 'active' : ''}`}
+            onClick={() => setActiveTab('search')}
+          >
+            <Search className="tab-icon" />
+            Search
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'insights' ? 'active' : ''}`}
+            onClick={() => setActiveTab('insights')}
+          >
+            <Brain className="tab-icon" />
+            AI Insights
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'recommendations' ? 'active' : ''}`}
+            onClick={() => setActiveTab('recommendations')}
+          >
+            <Lightbulb className="tab-icon" />
+            Recommendations
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <BarChart3 className="tab-icon" />
+            Analytics
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'config' ? 'active' : ''}`}
+            onClick={() => setActiveTab('config')}
+          >
+            <Settings className="tab-icon" />
+            Configuration
+          </button>
+        </div>
+
+        <div className="search-content">
+          {activeTab === 'search' && renderSearchInterface()}
+          {activeTab === 'insights' && renderInsights()}
+          {activeTab === 'recommendations' && renderRecommendations()}
+          {activeTab === 'analytics' && renderAnalytics()}
+          {activeTab === 'config' && renderConfiguration()}
+        </div>
       </div>
 
-      <div className="search-content">
-        {activeTab === 'search' && renderSearchInterface()}
-        {activeTab === 'insights' && renderInsights()}
-        {activeTab === 'recommendations' && renderRecommendations()}
-        {activeTab === 'analytics' && renderAnalytics()}
-        {activeTab === 'config' && renderConfiguration()}
-      </div>
-    </div>
+      {/* Modern Modal */}
+      {modal.show && (
+        <div className="modal-overlay" onClick={hideModal}>
+          <div className="modal-content notification-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-icon-wrapper">
+                {modal.type === 'success' && <div className="modal-icon success-icon">✓</div>}
+                {modal.type === 'error' && <div className="modal-icon error-icon">✕</div>}
+                {modal.type === 'warning' && <div className="modal-icon warning-icon">⚠</div>}
+                {modal.type === 'info' && <div className="modal-icon info-icon">ℹ</div>}
+              </div>
+              <h2>{modal.title}</h2>
+              <button className="modal-close" onClick={hideModal}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p className="modal-message">{modal.message}</p>
+              {modal.details && (
+                <div className="modal-details">
+                  <pre>{modal.details}</pre>
+                </div>
+              )}
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={hideModal}>
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </MainLayout>
   );
 };
 

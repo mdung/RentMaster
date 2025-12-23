@@ -22,9 +22,19 @@ export const TenantPortalPage: React.FC = () => {
     preferredTime: '',
     allowEntry: true
   });
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<TenantInvoice | null>(null);
+  const [paymentFormData, setPaymentFormData] = useState<any>({
+    amount: 0,
+    paymentMethod: '',
+    paymentMethodId: null,
+    notes: ''
+  });
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
 
   useEffect(() => {
     loadDashboard();
+    loadPaymentMethods();
   }, []);
 
   useEffect(() => {
@@ -123,6 +133,52 @@ export const TenantPortalPage: React.FC = () => {
       }
     } catch (error) {
       alert('Failed to submit maintenance request');
+    }
+  };
+
+  const loadPaymentMethods = async () => {
+    try {
+      const methods = await tenantPortalApi.getPaymentMethods();
+      setPaymentMethods(methods || []);
+    } catch (error) {
+      console.error('Failed to load payment methods:', error);
+    }
+  };
+
+  const handlePayInvoice = (invoice: TenantInvoice) => {
+    setSelectedInvoice(invoice);
+    setPaymentFormData({
+      amount: invoice.remainingAmount,
+      paymentMethod: '',
+      paymentMethodId: null,
+      notes: ''
+    });
+    setShowPaymentModal(true);
+  };
+
+  const handleProcessPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedInvoice) return;
+    
+    try {
+      await tenantPortalApi.processPayment(undefined, {
+        invoiceId: selectedInvoice.id,
+        amount: paymentFormData.amount,
+        paymentMethodId: paymentFormData.paymentMethodId,
+        paymentMethod: paymentFormData.paymentMethod,
+        notes: paymentFormData.notes
+      });
+      setShowPaymentModal(false);
+      setSelectedInvoice(null);
+      loadInvoices();
+      loadPaymentHistory();
+      if (dashboard) {
+        loadDashboard();
+      }
+      alert('Payment processed successfully!');
+    } catch (error) {
+      console.error('Failed to process payment:', error);
+      alert('Failed to process payment. Please try again.');
     }
   };
 
